@@ -1,0 +1,958 @@
+---
+# ============================================================================
+# CRITICAL RESEARCH VALIDATION: Progressive Swarm Scaling with 100% Tests
+# ============================================================================
+# Version: 1.0.0
+# Status: PRODUCTION-CRITICAL
+# Purpose: Validate 4→12→24→48 bot scaling with complete test coverage
+# Requirement: 100% GREEN tests before proceeding to next phase
+# Audience: AI Coding Agent (Autonomous Execution)
+# ============================================================================
+
+metadata:
+  criticality: "PRODUCTION"
+  research_stage: "CRITICAL_VALIDATION"
+  autonomous: true
+  requires_100_percent_tests: true
+  documentation_mandatory: true
+
+mission_statement: |
+  This is a CRITICAL research validation phase. We are proving that:
+  1. 4-bot parallel chunk works (baseline already proven)
+  2. Chunk replication scales linearly (4 → 12 → 24)
+  3. Heartbeat headroom enables 48-bot stability
+
+  EVERY test must pass (100% GREEN) before proceeding.
+  EVERY phase must be documented with evidence.
+  EVERY failure must trigger autonomous debugging with fallback.
+
+# ============================================================================
+# BASELINE VERIFICATION (GATE 0)
+# ============================================================================
+gate_0_baseline_verification:
+  name: "Verify 4-Bot Baseline Before Scaling"
+  criticality: "BLOCKING"
+  checkpoint: ".checkpoints/gate_0_baseline_verified.json"
+
+  purpose: |
+    Before scaling, re-verify the 4-bot baseline.
+    This ensures our foundation is solid.
+
+  test_execution:
+    - id: "BASELINE_001"
+      name: "4-Bot Concurrency Proof"
+      test_file: "tests/test_4bot_baseline.py"
+      command: "python3 tests/test_4bot_baseline.py"
+
+      implementation: |
+        import time
+        import concurrent.futures
+        import json
+
+        def cpu_task(duration=2.0):
+            start = time.time()
+            result = 0
+            while time.time() - start < duration:
+                for i in range(10000):
+                    result += i ** 2
+            return result
+
+        # Test 4 threads
+        start = time.time()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            futures = [executor.submit(cpu_task, 2.0) for _ in range(4)]
+            results = [f.result() for f in futures]
+        elapsed = time.time() - start
+
+        passed = elapsed < 3.0
+
+        result = {
+            "test": "4bot_baseline",
+            "elapsed": round(elapsed, 3),
+            "threshold": 3.0,
+            "passed": passed,
+            "interpretation": "TRUE_PARALLELISM" if passed else "FAILED"
+        }
+
+        with open(".checkpoints/baseline_4bot_result.json", "w") as f:
+            json.dump(result, f, indent=2)
+
+        print(f"4-bot baseline: {elapsed:.3f}s (threshold <3.0s)")
+        print(f"Status: {'PASS' if passed else 'FAIL'}")
+
+        return 0 if passed else 1
+
+      validation:
+        metric: "elapsed_seconds"
+        threshold: 3.0
+        must_pass: true
+
+      failure_recovery:
+        action: "ABORT_WITH_DIAGNOSTIC"
+        message: "4-bot baseline failed - cannot proceed to scaling"
+        diagnostic_steps:
+          - "Check if threading.Thread is being used"
+          - "Verify Python GIL is releasing during I/O"
+          - "Check CPU available cores"
+          - "Run: python3 -c 'import os; print(os.cpu_count())'"
+          - "ABORT - Request human review"
+
+  success_criteria:
+    - "BASELINE_001 passes (< 3.0s)"
+    - "Result saved to .checkpoints/baseline_4bot_result.json"
+    - "Checkpoint gate_0_baseline_verified.json written"
+
+  on_success:
+    message: "✅ 4-bot baseline verified - proceeding to 12-bot scaling"
+
+  on_failure:
+    action: "ABORT_MISSION"
+    message: "❌ 4-bot baseline failed - scaling cannot proceed"
+
+# ============================================================================
+# PHASE 1: 12-BOT SCALING (3 CHUNKS)
+# ============================================================================
+phase_1_12bot_scaling:
+  name: "Scale to 12 Bots (3 Chunks × 4 Bots)"
+  checkpoint: ".checkpoints/phase_1_12bot_complete.json"
+  requires: ".checkpoints/gate_0_baseline_verified.json"
+
+  configuration:
+    bot_count: 12
+    chunk_count: 3
+    chunk_size: 4
+    spawn_stagger: 0.05  # Within chunk
+    chunk_stagger: 0.1   # Between chunks
+    heartbeat_interval: 0.1
+    ollama_parallel: 10
+
+  pre_phase_validation:
+    - id: "PRE_12_001"
+      name: "Verify Configuration"
+      checks:
+        - "Check OLLAMA_NUM_PARALLEL >= 10"
+        - "Verify swarm_config.yaml has chunk settings"
+        - "Confirm baseline checkpoint exists"
+
+      validation: "All checks pass"
+
+      failure_recovery:
+        issue: "OLLAMA_NUM_PARALLEL < 10"
+        action: |
+          export OLLAMA_NUM_PARALLEL=10
+          export OLLAMA_MAX_QUEUE=256
+          Restart Ollama service
+        retry: true
+
+  test_suite:
+    - id: "TEST_12_001"
+      name: "Spawn 12 Bots in 3 Chunks"
+      test_file: "tests/test_12bot_spawn.py"
+      command: "python3 tests/test_12bot_spawn.py"
+      timeout: 60
+
+      implementation: |
+        from core.swarm_manager import SwarmManager
+        import time
+        import json
+
+        manager = SwarmManager()
+
+        # Spawn 3 chunks
+        spawned = 0
+        for chunk_id in range(3):
+            print(f"Spawning chunk {chunk_id+1}/3...")
+
+            for bot_offset in range(4):
+                bot_id = chunk_id * 4 + bot_offset
+                success = manager.spawn_bot(bot_id)
+                if success:
+                    spawned += 1
+                time.sleep(0.05)
+
+            time.sleep(0.1)
+
+        # Verify
+        result = {
+            "expected": 12,
+            "spawned": spawned,
+            "success_rate": spawned / 12 * 100,
+            "passed": spawned == 12
+        }
+
+        with open(".checkpoints/test_12bot_spawn_result.json", "w") as f:
+            json.dump(result, f, indent=2)
+
+        print(f"Spawned: {spawned}/12 bots")
+        return 0 if spawned == 12 else 1
+
+      validation:
+        expected_bots: 12
+        must_pass: true
+
+      failure_recovery:
+        issue: "Not all bots spawned"
+        diagnostic:
+          - "Check logs/errors.log for spawn failures"
+          - "Verify Ollama is running: curl http://localhost:11434"
+          - "Check memory: ps aux | grep python"
+          - "Retry with 10 bots (2.5 chunks)"
+        max_retries: 2
+
+    - id: "TEST_12_002"
+      name: "Thread Count Verification"
+      test_file: "tests/test_12bot_threads.py"
+      command: "python3 tests/test_12bot_threads.py"
+
+      implementation: |
+        import threading
+        import time
+        import json
+        from core.swarm_manager import SwarmManager
+
+        manager = SwarmManager()
+        manager.spawn_swarm(12)
+
+        time.sleep(2)  # Let threads stabilize
+
+        # Sample thread count
+        samples = []
+        for _ in range(10):
+            count = threading.active_count()
+            samples.append(count)
+            time.sleep(1)
+
+        avg_threads = sum(samples) / len(samples)
+
+        result = {
+            "expected_threads": 12,
+            "average_threads": round(avg_threads, 1),
+            "samples": samples,
+            "passed": avg_threads >= 12
+        }
+
+        with open(".checkpoints/test_12bot_threads_result.json", "w") as f:
+            json.dump(result, f, indent=2)
+
+        manager.shutdown()
+
+        print(f"Average threads: {avg_threads:.1f} (expected >=12)")
+        return 0 if result["passed"] else 1
+
+      validation:
+        metric: "average_threads"
+        threshold: 12
+        must_pass: true
+
+      failure_recovery:
+        issue: "Thread count < 12"
+        diagnostic:
+          - "Check if bots are using threading.Thread"
+          - "Verify bot_agent.py implementation"
+          - "Check for crashed threads"
+          - "Run: ps -M -p $(pgrep -f swarm_manager)"
+        action: "INVESTIGATE_THREADING_IMPLEMENTATION"
+
+    - id: "TEST_12_003"
+      name: "12-Bot Load Test (60 seconds)"
+      test_file: "tests/test_12bot_load.py"
+      command: "python3 tests/test_12bot_load.py --duration 60"
+
+      implementation: |
+        from core.swarm_manager import SwarmManager
+        import time
+        import json
+
+        manager = SwarmManager()
+        manager.spawn_swarm(12)
+
+        time.sleep(2)
+
+        # Run load test
+        tasks_submitted = 0
+        tasks_completed = 0
+
+        start = time.time()
+        while time.time() - start < 60:
+            # Broadcast task to all bots
+            manager.broadcast_task("Test prompt")
+            tasks_submitted += 12
+
+            # Collect results
+            results = manager.collect_results(timeout=2)
+            tasks_completed += len(results)
+
+            time.sleep(1)
+
+        success_rate = tasks_completed / tasks_submitted * 100 if tasks_submitted > 0 else 0
+
+        result = {
+            "tasks_submitted": tasks_submitted,
+            "tasks_completed": tasks_completed,
+            "success_rate": round(success_rate, 1),
+            "passed": success_rate >= 85
+        }
+
+        with open(".checkpoints/test_12bot_load_result.json", "w") as f:
+            json.dump(result, f, indent=2)
+
+        manager.shutdown()
+
+        print(f"Success rate: {success_rate:.1f}% (threshold >=85%)")
+        return 0 if result["passed"] else 1
+
+      validation:
+        metric: "success_rate"
+        threshold: 85.0
+        must_pass: true
+
+      failure_recovery:
+        issue: "Success rate < 85%"
+        diagnostic:
+          - "Check Ollama response times"
+          - "Verify network connectivity to Ollama"
+          - "Check for timeout errors in logs"
+          - "Increase heartbeat_interval to 0.15s"
+          - "Reduce to 10 bots and retry"
+        action: "TUNE_HEARTBEAT_OR_REDUCE_BOTS"
+
+    - id: "TEST_12_004"
+      name: "CPU Core Utilization"
+      test_file: "tests/test_12bot_cpu.py"
+      command: "python3 tests/test_12bot_cpu.py"
+
+      implementation: |
+        import psutil
+        import time
+        import json
+        from core.swarm_manager import SwarmManager
+
+        manager = SwarmManager()
+        manager.spawn_swarm(12)
+
+        # Submit tasks
+        for _ in range(20):
+            manager.broadcast_task("CPU test")
+
+        # Monitor CPU
+        samples = []
+        for _ in range(30):
+            per_core = psutil.cpu_percent(interval=1, percpu=True)
+            total = psutil.cpu_percent()
+            per_core_data = per_core
+            sample = {
+                "timestamp": time.time(),
+                "per_core": per_core_data,
+                "total": total
+            }
+            samples.append(sample)
+
+        # Analyze
+        num_cores = len(samples[0]["per_core"])
+        avg_per_core = [0] * num_cores
+        for sample in samples:
+            for i, pct in enumerate(sample["per_core"]):
+                avg_per_core[i] += pct / len(samples)
+
+        high_util_cores = sum(1 for avg in avg_per_core if avg > 20)
+
+        result = {
+            "total_cores": num_cores,
+            "cores_with_high_util": high_util_cores,
+            "avg_per_core": [round(x, 1) for x in avg_per_core],
+            "passed": high_util_cores >= 10
+        }
+
+        with open(".checkpoints/test_12bot_cpu_result.json", "w") as f:
+            json.dump(result, f, indent=2)
+
+        manager.shutdown()
+
+        print(f"Cores active: {high_util_cores}/{num_cores} (threshold >=10)")
+        return 0 if result["passed"] else 1
+
+      validation:
+        metric: "cores_active"
+        threshold: 10
+        must_pass: true
+
+      failure_recovery:
+        issue: "Cores active < 10"
+        diagnostic:
+          - "Check OLLAMA_NUM_PARALLEL setting"
+          - "Verify bots are submitting tasks"
+          - "Check if Ollama is bottleneck"
+          - "Increase OLLAMA_NUM_PARALLEL to 12"
+        action: "INCREASE_OLLAMA_PARALLEL"
+
+  success_criteria:
+    all_tests_must_pass: true
+    required:
+      - "TEST_12_001: All 12 bots spawn"
+      - "TEST_12_002: Thread count >= 12"
+      - "TEST_12_003: Success rate >= 85%"
+      - "TEST_12_004: Cores active >= 10"
+
+  evidence_capture:
+    screenshots:
+      - "Activity Monitor before test"
+      - "Activity Monitor during peak (30s in)"
+      - "Activity Monitor after test"
+
+    save_artifacts:
+      - ".checkpoints/test_12bot_spawn_result.json"
+      - ".checkpoints/test_12bot_threads_result.json"
+      - ".checkpoints/test_12bot_load_result.json"
+      - ".checkpoints/test_12bot_cpu_result.json"
+      - ".checkpoints/phase_1_12bot_complete.json"
+
+  on_success:
+    actions:
+      - "Write phase_1_12bot_complete.json checkpoint"
+      - "Generate Phase 1 summary report"
+      - "Proceed to Phase 2 (24 bots)"
+    message: "✅ Phase 1 COMPLETE: 12 bots validated (100% tests passed)"
+
+  on_failure:
+    actions:
+      - "Document which test failed"
+      - "Run diagnostic procedures"
+      - "Attempt recovery actions"
+      - "If 3 failures: ABORT and request human review"
+    message: "❌ Phase 1 FAILED: Cannot proceed to Phase 2"
+
+# ============================================================================
+# PHASE 2: 24-BOT SCALING (6 CHUNKS)
+# ============================================================================
+phase_2_24bot_scaling:
+  name: "Scale to 24 Bots (6 Chunks × 4 Bots)"
+  checkpoint: ".checkpoints/phase_2_24bot_complete.json"
+  requires: ".checkpoints/phase_1_12bot_complete.json"
+
+  configuration:
+    bot_count: 24
+    chunk_count: 6
+    chunk_size: 4
+    spawn_stagger: 0.05
+    chunk_stagger: 0.1
+    heartbeat_interval: 0.1
+    ollama_parallel: 12  # Increased
+
+  pre_phase_validation:
+    - id: "PRE_24_001"
+      name: "Verify Ollama Parallel Increased"
+      check: "OLLAMA_NUM_PARALLEL >= 12"
+
+      failure_recovery:
+        action: |
+          export OLLAMA_NUM_PARALLEL=12
+          export OLLAMA_MAX_QUEUE=512
+          pkill ollama
+          ollama serve &
+          sleep 5
+        retry: true
+
+  test_suite:
+    - id: "TEST_24_001"
+      name: "Spawn 24 Bots in 6 Chunks"
+      test_file: "tests/test_24bot_spawn.py"
+      command: "python3 tests/test_24bot_spawn.py"
+      timeout: 120
+
+      validation:
+        expected_bots: 24
+        must_pass: true
+
+      failure_recovery:
+        issue: "Not all 24 bots spawned"
+        fallback: "Try spawning 20 bots (5 chunks)"
+        max_retries: 2
+
+    - id: "TEST_24_002"
+      name: "Thread Count Verification"
+      test_file: "tests/test_24bot_threads.py"
+
+      validation:
+        metric: "average_threads"
+        threshold: 24
+        must_pass: true
+
+    - id: "TEST_24_003"
+      name: "24-Bot Load Test (60 seconds)"
+      test_file: "tests/test_24bot_load.py"
+      command: "python3 tests/test_24bot_load.py --duration 60"
+
+      validation:
+        metric: "success_rate"
+        threshold: 75.0  # Lower than 12-bot (saturation)
+        must_pass: true
+
+      failure_recovery:
+        issue: "Success rate < 75%"
+        actions:
+          - "Increase heartbeat_interval to 0.15s"
+          - "Check for Ollama queue buildup"
+          - "Verify no memory swapping"
+          - "Fallback to 20 bots if persistent"
+
+    - id: "TEST_24_004"
+      name: "CPU Core Saturation Test"
+      test_file: "tests/test_24bot_cpu.py"
+
+      validation:
+        metric: "cores_active"
+        threshold: 12  # Expect all cores
+        must_pass: true
+
+      expected_observation: "All 14 cores should show activity"
+
+  success_criteria:
+    all_tests_must_pass: true
+    required:
+      - "TEST_24_001: All 24 bots spawn"
+      - "TEST_24_002: Thread count >= 24"
+      - "TEST_24_003: Success rate >= 75%"
+      - "TEST_24_004: Cores active >= 12"
+
+  on_success:
+    message: "✅ Phase 2 COMPLETE: 24 bots validated (core saturation achieved)"
+    proceed_to: "Phase 3 (48 bots with headroom)"
+
+  on_failure:
+    fallback: "Accept 20-bot capacity as maximum"
+    message: "⚠️ 24-bot target not achieved, validated capacity: 20 bots"
+
+# ============================================================================
+# PHASE 3: 48-BOT HEADROOM SCALING (12 CHUNKS)
+# ============================================================================
+phase_3_48bot_headroom:
+  name: "Scale to 48 Bots (12 Chunks × 4 Bots with Headroom)"
+  checkpoint: ".checkpoints/phase_3_48bot_complete.json"
+  requires: ".checkpoints/phase_2_24bot_complete.json"
+
+  configuration:
+    bot_count: 48
+    chunk_count: 12
+    chunk_size: 4
+    spawn_stagger: 0.05
+    chunk_stagger: 0.15  # Increased stagger
+    heartbeat_interval: 0.1  # Critical for headroom
+    ollama_parallel: 12
+
+  headroom_explanation: |
+    48 bots on 14 cores requires time-slicing via heartbeat.
+    Each bot works ~100ms, then pauses 100ms (heartbeat).
+    Effective duty cycle: ~50% per bot.
+    This creates CPU breathing room for stability.
+
+  test_suite:
+    - id: "TEST_48_001"
+      name: "Spawn 48 Bots in 12 Chunks"
+      test_file: "tests/test_48bot_spawn.py"
+      timeout: 180
+
+      validation:
+        expected_bots: 48
+        must_pass: true
+
+      failure_recovery:
+        issue: "Cannot spawn 48 bots"
+        fallback_sequence:
+          - "Try 44 bots (11 chunks)"
+          - "Try 40 bots (10 chunks)"
+          - "Try 36 bots (9 chunks)"
+        accept_minimum: 36
+
+    - id: "TEST_48_002"
+      name: "Thread Count Verification"
+      test_file: "tests/test_48bot_threads.py"
+
+      validation:
+        metric: "average_threads"
+        threshold: 48
+        must_pass: true
+
+    - id: "TEST_48_003"
+      name: "48-Bot Stability Test (15 minutes)"
+      test_file: "tests/test_48bot_stability.py"
+      command: "python3 tests/test_48bot_stability.py --duration 900"
+      timeout: 1000
+
+      validation:
+        metric: "success_rate"
+        threshold: 70.0
+        must_pass: true
+        sustained: "15 minutes without crashes"
+
+      monitoring:
+        - "CPU temperature (thermal throttling check)"
+        - "Memory usage (leak detection)"
+        - "Success rate stability"
+        - "System responsiveness"
+
+      failure_recovery:
+        issue: "Stability test fails"
+        actions:
+          - "Check for thermal throttling"
+          - "Increase heartbeat_interval to 0.15s"
+          - "Check memory for leaks"
+          - "Reduce to 40 bots and retry"
+
+    - id: "TEST_48_004"
+      name: "Heartbeat Wave Pattern Detection"
+      test_file: "tests/test_48bot_heartbeat.py"
+
+      purpose: |
+        Verify heartbeat creates CPU wave pattern, not sustained 100%.
+        Sample CPU every 100ms for 60 seconds.
+        Look for rhythmic oscillation (proof of headroom).
+
+      validation:
+        pattern: "Wave detected (not flat at 100%)"
+        must_pass: true
+
+      expected: |
+        CPU should oscillate:
+        80% → 50% → 85% → 45% → 80% ...
+        This proves heartbeat is creating breathing room.
+
+  success_criteria:
+    all_tests_must_pass: true
+    required:
+      - "TEST_48_001: All 48 bots spawn"
+      - "TEST_48_002: Thread count >= 48"
+      - "TEST_48_003: Success rate >= 70% for 15 min"
+      - "TEST_48_004: Heartbeat wave pattern detected"
+
+  on_success:
+    message: "✅ Phase 3 COMPLETE: 48-bot swarm validated (RESEARCH SUCCESS)"
+    actions:
+      - "Generate final research report"
+      - "Document all evidence"
+      - "Create proof bundle"
+
+  on_failure:
+    fallback: "Accept maximum validated capacity (36-44 bots)"
+    message: "⚠️ 48-bot target not achieved, maximum capacity documented"
+
+# ============================================================================
+# AUTONOMOUS DEBUGGING FRAMEWORK
+# ============================================================================
+autonomous_debugging:
+  enabled: true
+  max_auto_retries: 3
+  request_human_after: 3
+
+  common_issues:
+    issue_001:
+      symptom: "Bots fail to spawn"
+      diagnostic:
+        - "Check Ollama running: curl http://localhost:11434"
+        - "Check port not blocked: lsof -i :11434"
+        - "Verify model loaded: ollama list"
+
+      recovery_actions:
+        - action: "Restart Ollama"
+          commands:
+            - "pkill ollama"
+            - "ollama serve &"
+            - "sleep 5"
+            - "ollama pull gemma3:270m"
+
+        - action: "Check memory"
+          commands:
+            - "free -h"
+            - "ps aux | grep ollama"
+
+        - action: "Reduce bot count"
+          note: "Try 75% of target (e.g., 9 bots instead of 12)"
+
+      max_retries: 2
+
+    issue_002:
+      symptom: "Low success rate (< threshold)"
+      diagnostic:
+        - "Check Ollama response times"
+        - "Monitor queue depth"
+        - "Check for timeout errors"
+
+      recovery_actions:
+        - action: "Increase heartbeat interval"
+          change: "heartbeat_interval: 0.1 → 0.15"
+          rationale: "Reduce load on system"
+
+        - action: "Increase Ollama parallel"
+          change: "OLLAMA_NUM_PARALLEL += 2"
+          rationale: "More concurrent handlers"
+
+        - action: "Reduce bot count by 25%"
+          rationale: "Find stable capacity"
+
+      max_retries: 3
+
+    issue_003:
+      symptom: "Low thread count (< expected)"
+      diagnostic:
+        - "Check if threading.Thread is used"
+        - "grep 'threading.Thread' core/bot_agent.py"
+        - "Check for crashed threads"
+
+      recovery_actions:
+        - action: "Verify implementation"
+          check: "Ensure bot_agent.py uses threading, not asyncio"
+
+        - action: "Check thread crashes"
+          commands:
+            - "tail -100 logs/errors.log"
+            - "Look for exceptions in bot threads"
+
+        - action: "ABORT if asyncio detected"
+          reason: "Cannot achieve parallelism with asyncio"
+
+      escalate_to_human: true
+
+    issue_004:
+      symptom: "Low CPU core utilization"
+      diagnostic:
+        - "Check OLLAMA_NUM_PARALLEL setting"
+        - "Verify bots are submitting tasks"
+        - "Check if GIL is bottleneck"
+
+      recovery_actions:
+        - action: "Increase OLLAMA_NUM_PARALLEL"
+          target: "Set to 12 or higher"
+
+        - action: "Verify task submission"
+          check: "Ensure broadcast_task is being called"
+
+        - action: "Check Ollama bottleneck"
+          diagnostic: "Monitor Ollama CPU usage separately"
+
+      max_retries: 2
+
+    issue_005:
+      symptom: "System becomes unresponsive"
+      diagnostic:
+        - "Check memory usage: free -h"
+        - "Check swap usage"
+        - "Check CPU temperature"
+
+      recovery_actions:
+        - action: "EMERGENCY SHUTDOWN"
+          commands:
+            - "manager.shutdown()"
+            - "pkill -f swarm_manager"
+
+        - action: "Analyze cause"
+          checks:
+            - "Memory leak: Check RSS memory growth"
+            - "CPU thermal: Check for throttling"
+            - "Too many bots: Exceeded capacity"
+
+        - action: "Reduce bot count by 50%"
+          rationale: "Conservative restart"
+
+      escalate_to_human: true
+
+    issue_006:
+      symptom: "Thermal throttling detected"
+      diagnostic:
+        - "Check CPU temperature"
+        - "Check sustained 100% load"
+
+      recovery_actions:
+        - action: "Increase heartbeat interval"
+          change: "heartbeat_interval: 0.1 → 0.2"
+          rationale: "Reduce sustained CPU load"
+
+        - action: "Reduce bot count"
+          change: "Drop by 25%"
+          rationale: "Lower thermal load"
+
+        - action: "Pause test for cooling"
+          duration: "5 minutes"
+
+      max_retries: 1
+
+# ============================================================================
+# DOCUMENTATION REQUIREMENTS
+# ============================================================================
+documentation_requirements:
+  mandatory: true
+
+  for_each_phase:
+    required_artifacts:
+      - "Test result JSONs (all tests)"
+      - "Screenshots (before/during/after)"
+      - "Success rate graphs"
+      - "CPU utilization graphs"
+      - "Phase summary report"
+
+    phase_summary_template: |
+      # Phase N Summary
+
+      ## Configuration
+      - Bot count: X
+      - Chunk count: Y
+      - Test duration: Z seconds
+
+      ## Test Results
+      - TEST_001: PASS/FAIL (details)
+      - TEST_002: PASS/FAIL (details)
+      - TEST_003: PASS/FAIL (details)
+      - TEST_004: PASS/FAIL (details)
+
+      ## Key Metrics
+      - Success rate: X%
+      - Cores active: Y/14
+      - Average threads: Z
+
+      ## Evidence
+      - Screenshots: [list]
+      - Data files: [list]
+
+      ## Conclusion
+      [Phase passed/failed with summary]
+
+  final_research_report:
+    file: "docs/RESEARCH_VALIDATION_REPORT.md"
+    sections:
+      - "Executive Summary"
+      - "Baseline Verification (4 bots)"
+      - "Phase 1 Results (12 bots)"
+      - "Phase 2 Results (24 bots)"
+      - "Phase 3 Results (48 bots)"
+      - "Evidence Bundle"
+      - "Lessons Learned"
+      - "Recommendations"
+
+    must_include:
+      - "All test results (100% pass)"
+      - "All screenshots"
+      - "Performance graphs"
+      - "Capacity analysis"
+      - "Proof of parallelism"
+
+# ============================================================================
+# AI AGENT EXECUTION PROTOCOL
+# ============================================================================
+ai_agent_protocol:
+  primary_command: "python3 scripts/run_critical_validation.py"
+
+  execution_rules:
+    critical:
+      - "MUST achieve 100% test pass rate for each phase"
+      - "MUST capture all evidence (screenshots, JSONs)"
+      - "MUST generate documentation for each phase"
+      - "MUST run autonomous debugging on failures"
+      - "MUST NOT skip any validation gate"
+      - "MUST NOT proceed with failing tests"
+
+  execution_sequence:
+    - "Gate 0: Verify 4-bot baseline"
+    - "Phase 1: Scale to 12 bots (100% tests pass)"
+    - "Phase 2: Scale to 24 bots (100% tests pass)"
+    - "Phase 3: Scale to 48 bots (100% tests pass)"
+    - "Generate final research report"
+    - "Commit all evidence to repository"
+
+  failure_handling:
+    on_test_failure:
+      - "Log failure details"
+      - "Run diagnostic procedures"
+      - "Attempt recovery actions (max 3 times)"
+      - "If recovery fails: Document and request human"
+
+    on_phase_failure:
+      - "Document maximum validated capacity"
+      - "Generate partial success report"
+      - "Recommend next steps"
+
+  abort_conditions:
+    - "Gate 0 (baseline) fails"
+    - "System becomes unresponsive"
+    - "3 consecutive test failures after recovery"
+    - "Thermal emergency"
+    - "Memory exhaustion"
+
+  success_indicators:
+    phase_1: "12 bots, 100% tests pass"
+    phase_2: "24 bots, 100% tests pass"
+    phase_3: "48 bots, 100% tests pass"
+    overall: "All phases complete with evidence"
+
+# ============================================================================
+# SUCCESS CRITERIA - RESEARCH VALIDATION
+# ============================================================================
+research_validation_success:
+  critical_requirements:
+    - "Baseline verified (4 bots < 3s)"
+    - "Phase 1: 12 bots validated (100% tests)"
+    - "Phase 2: 24 bots validated (100% tests)"
+    - "Phase 3: 48 bots validated (100% tests)"
+    - "All evidence captured and documented"
+    - "Final research report generated"
+
+  minimum_acceptable:
+    - "Baseline verified"
+    - "Phase 1 complete (12 bots)"
+    - "Phase 2 complete (24 bots)"
+    - "Phase 3 attempted (document max capacity)"
+
+  optimal_outcome:
+    - "All 3 phases complete (100% tests)"
+    - "48-bot swarm stable"
+    - "Comprehensive evidence bundle"
+    - "Publication-ready research report"
+
+  research_claims_proven:
+    - "4-bot parallel chunk validated"
+    - "Chunk replication scales linearly"
+    - "Heartbeat enables over-subscription"
+    - "M3 Max capacity: 48+ bots sustainable"
+    - "Threading architecture enables emergence"
+
+# ============================================================================
+# FINAL DELIVERABLES
+# ============================================================================
+final_deliverables:
+  critical_files:
+    - ".checkpoints/gate_0_baseline_verified.json"
+    - ".checkpoints/phase_1_12bot_complete.json"
+    - ".checkpoints/phase_2_24bot_complete.json"
+    - ".checkpoints/phase_3_48bot_complete.json"
+    - "docs/RESEARCH_VALIDATION_REPORT.md"
+    - ".checkpoints/proof/SCALING_PROOF_BUNDLE.json"
+
+  evidence_bundle:
+    location: ".checkpoints/proof/"
+    contents:
+      - "All test result JSONs"
+      - "All screenshots"
+      - "Phase summary reports"
+      - "Performance graphs"
+      - "Final research report"
+
+  git_commit:
+    required: true
+    message: |
+      Research validation complete: 4→12→24→48 bot scaling
+
+      - Baseline: 4 bots verified
+      - Phase 1: 12 bots validated (100% tests)
+      - Phase 2: 24 bots validated (100% tests)
+      - Phase 3: 48 bots validated (100% tests)
+
+      Evidence: .checkpoints/proof/
+      Report: docs/RESEARCH_VALIDATION_REPORT.md
+
+# ============================================================================
+# REFERENCES
+# ============================================================================
+references:
+  baseline: "4-bot chunk: 2.119s < 3.0s threshold"
+  architecture: "Chunk-based replication with heartbeat"
+  hardware: "M3 Max 14 cores, 36GB RAM"
+  research_date: "2025-10-22"
+  criticality: "PRODUCTION - RESEARCH VALIDATION"
+  status: "READY FOR AUTONOMOUS EXECUTION"
