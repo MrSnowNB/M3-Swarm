@@ -1,0 +1,16 @@
+{
+  "gate": "1_code_audit",
+  "timestamp": "2025-10-22T13:57:00.583069Z",
+  "checks": {
+    "asyncio_line_count": 0,
+    "threading_line_count": 0,
+    "bot_agent_threading": false,
+    "swarm_manager_threading": false
+  },
+  "passed": false,
+  "summary": {
+    "threading_dominant": false,
+    "bot_agent_ok": false,
+    "swarm_manager_ok": false
+  }
+}

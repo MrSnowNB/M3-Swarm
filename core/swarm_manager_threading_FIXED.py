@@ -12,7 +12,7 @@ from core.bot_agent_threading_FIXED import ThreadBotAgent, BotResponse
 class ThreadSwarmManager:
     '''Manages swarm of truly parallel bot threads'''
 
-    def __init__(self, config_path: str = "config/swarm_config.yaml"):
+    def __init__(self, config_path: str = "swarm_config.yaml"):
         # Load config synchronously for compatibility
         import yaml
         with open(config_path, 'r') as f:
