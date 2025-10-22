@@ -1,0 +1,12 @@
+{
+  "test_description": "4 CPU-bound tasks parallel execution proof",
+  "method": "concurrent.futures.ThreadPoolExecutor",
+  "total_wall_clock_time": 2.119,
+  "threshold_for_parallelism": 3.0,
+  "parallelism_confirmed": true,
+  "speedup_vs_sequential": 3.774813674832912,
+  "system_cpus": 14,
+  "task_count": 4,
+  "task_duration_target": 2.0,
+  "cannot_be_faked_by": "asyncio cooperative multitasking (no GIL release)"
+}

@@ -1,0 +1,948 @@
+---
+# ============================================================================
+# AI-FIRST MIGRATION PLAN: Asyncio → Threading for Emergence
+# ============================================================================
+# Version: 1.0.0
+# Project: M3-Swarm Emergence Architecture Fix
+# Issue: Asyncio prevents true concurrency and emergent behaviors
+# Solution: Migrate to threading with heartbeat pattern (Z8-validated approach)
+# Target: macOS M3 Max 36GB with 14 cores (10P + 4E)
+# ============================================================================
+
+metadata:
+  migration_type: "architecture_refactor"
+  critical_path: true
+  rollback_required: true
+  baseline_reference: "Z8 Swarm-100 threading implementation"
+  validation_level: "strict_with_emergence_tests"
+
+problem_statement:
+  issue: "Asyncio provides cooperative multitasking, not true concurrency"
+  impact:
+    - "Sequential execution prevents simultaneous bot interactions"
+    - "No emergent behaviors (clustering, flocking, synchronization)"
+    - "Deterministic event loop scheduling prevents spontaneous patterns"
+    - "Temporal patterns are artificial (await points, not real-time overlap)"
+    - "Cannot utilize all 14 CPU cores for true parallel execution"
+  evidence:
+    - "CPU history shows only 6 cores active (Ollama), not bot threads"
+    - "Z8 baseline uses threading + heartbeat for emergence"
+    - "Research shows emergent timing requires concurrent execution"
+
+solution_overview:
+  approach: "Replace asyncio with threading + heartbeat pattern"
+  benefits:
+    - "True concurrent execution across all 14 cores"
+    - "Real-time simultaneous bot interactions"
+    - "Natural synchronization and phase coordination"
+    - "Emergent behaviors from timing overlaps"
+    - "Match Z8 validated architecture"
+  risks:
+    - "More complex error handling (race conditions)"
+    - "Higher memory overhead (thread stacks)"
+    - "Need proper synchronization primitives"
+
+# ============================================================================
+# PHASE 0: PRE-MIGRATION BACKUP & ANALYSIS
+# ============================================================================
+phase_0_preparation:
+  name: "Backup Current Implementation & Baseline Analysis"
+  checkpoint: ".checkpoints/migration_phase_0_complete.json"
+  critical: true
+
+  steps:
+    - id: "BACKUP_001"
+      name: "Backup Current Asyncio Implementation"
+      actions:
+        - "git checkout -b backup-asyncio-implementation"
+        - "git commit -am 'Backup: Pre-migration asyncio state'"
+        - "cp core/bot_agent.py core/bot_agent_asyncio_backup.py"
+        - "cp core/swarm_manager.py core/swarm_manager_asyncio_backup.py"
+      validation:
+        test: "Backup files exist and are identical to current"
+        command: "diff core/bot_agent.py core/bot_agent_asyncio_backup.py"
+        expected: "No differences (exit code 0)"
+      failure_action: "ABORT_MIGRATION"
+
+    - id: "ANALYZE_001"
+      name: "Document Current Asyncio Performance Baseline"
+      actions:
+        - "Run current async implementation with metrics"
+        - "python3 tests/test_swarm_load.py --bots 24 --duration 60 --output baseline_asyncio.json"
+      validation:
+        test: "Baseline metrics captured"
+        expected: "baseline_asyncio.json contains timing, CPU, memory data"
+      metrics_to_capture:
+        - "Total execution time"
+        - "CPU utilization per core"
+        - "Success rate"
+        - "Response time distribution"
+        - "Memory usage"
+      failure_action: "RUN_RECOVERY_ANALYZE_001"
+
+    - id: "ANALYZE_002"
+      name: "Identify All Asyncio Dependencies"
+      script: |
+        # Find all async/await usage
+        grep -r "async def" core/ tests/ > asyncio_audit.txt
+        grep -r "await " core/ tests/ >> asyncio_audit.txt
+        grep -r "asyncio\\." core/ tests/ >> asyncio_audit.txt
+      validation:
+        test: "Audit file created with all asyncio usage"
+        expected: "asyncio_audit.txt exists and is not empty"
+      failure_action: "LOG_WARNING_CONTINUE"
+
+  recovery_procedures:
+    RUN_RECOVERY_ANALYZE_001:
+      description: "Baseline test failed"
+      steps:
+        - "Check if Ollama is running"
+        - "Verify model is loaded"
+        - "Reduce bot count to 12 and retry"
+        - "If still fails, document failure and continue (not critical)"
+      max_retries: 2
+
+  success_criteria:
+    - "All current code backed up to git branch"
+    - "Baseline performance captured OR failure documented"
+    - "Asyncio usage audit complete"
+    - "Checkpoint written"
+
+# ============================================================================
+# PHASE 1: IMPLEMENT THREADING PRIMITIVES
+# ============================================================================
+phase_1_threading_foundation:
+  name: "Build Threading Infrastructure"
+  checkpoint: ".checkpoints/migration_phase_1_complete.json"
+  requires: ".checkpoints/migration_phase_0_complete.json"
+
+  implementation_order:
+    - id: "THREAD_001"
+      file: "core/thread_bot_agent.py"
+      description: "Create threading-based bot agent (parallel to asyncio version)"
+      template: |
+        '''
+        Threading-based bot agent with heartbeat pattern
+        DO NOT modify bot_agent.py yet - create new file first
+        '''
+        import threading
+        import time
+        import ollama
+        from typing import Dict, Any, Optional
+        from dataclasses import dataclass
+
+        @dataclass
+        class BotResponse:
+            bot_id: int
+            success: bool
+            response: Optional[str]
+            response_time: float
+            error: Optional[str] = None
+            timestamp: float = 0
+
+        class ThreadBotAgent:
+            def __init__(self, bot_id: int, model: str, config: Dict[str, Any]):
+                self.bot_id = bot_id
+                self.model = model
+                self.config = config
+                self.client = ollama.Client(host=config.get('ollama_host'))
+                
+                # Thread management
+                self.thread = None
+                self.running = False
+                self.heartbeat_interval = config.get('heartbeat_interval', 0.1)
+                
+                # Synchronization
+                self.lock = threading.Lock()
+                self.task_queue = []
+                self.results = []
+                
+                # Metrics
+                self.total_requests = 0
+                self.successful_requests = 0
+                self.failed_requests = 0
+                
+            def start(self):
+                '''Start bot thread'''
+                if self.running:
+                    return
+                self.running = True
+                self.thread = threading.Thread(target=self._run_loop, daemon=True)
+                self.thread.start()
+            
+            def stop(self):
+                '''Stop bot thread gracefully'''
+                self.running = False
+                if self.thread:
+                    self.thread.join(timeout=5)
+            
+            def _run_loop(self):
+                '''Main bot execution loop with heartbeat'''
+                while self.running:
+                    # Check for tasks
+                    task = self._get_next_task()
+                    if task:
+                        result = self._execute_task(task)
+                        self._store_result(result)
+                    
+                    # Heartbeat pause to prevent CPU spikes
+                    time.sleep(self.heartbeat_interval)
+            
+            def _get_next_task(self) -> Optional[str]:
+                with self.lock:
+                    if self.task_queue:
+                        return self.task_queue.pop(0)
+                return None
+            
+            def _store_result(self, result: BotResponse):
+                with self.lock:
+                    self.results.append(result)
+            
+            def _execute_task(self, prompt: str) -> BotResponse:
+                '''Execute single prompt synchronously'''
+                start_time = time.time()
+                
+                try:
+                    response = self.client.chat(
+                        model=self.model,
+                        messages=[{'role': 'user', 'content': prompt}],
+                        options={
+                            'num_ctx': self.config.get('context_length', 2048),
+                            'temperature': self.config.get('temperature', 0.7)
+                        }
+                    )
+                    
+                    response_time = time.time() - start_time
+                    
+                    with self.lock:
+                        self.total_requests += 1
+                        self.successful_requests += 1
+                    
+                    return BotResponse(
+                        bot_id=self.bot_id,
+                        success=True,
+                        response=response['message']['content'],
+                        response_time=response_time,
+                        timestamp=time.time()
+                    )
+                    
+                except Exception as e:
+                    response_time = time.time() - start_time
+                    
+                    with self.lock:
+                        self.total_requests += 1
+                        self.failed_requests += 1
+                    
+                    return BotResponse(
+                        bot_id=self.bot_id,
+                        success=False,
+                        response=None,
+                        response_time=response_time,
+                        error=str(e),
+                        timestamp=time.time()
+                    )
+            
+            def submit_task(self, prompt: str):
+                '''Thread-safe task submission'''
+                with self.lock:
+                    self.task_queue.append(prompt)
+            
+            def get_results(self) -> list:
+                '''Thread-safe result retrieval'''
+                with self.lock:
+                    results = self.results.copy()
+                    self.results.clear()
+                    return results
+            
+            def get_metrics(self) -> Dict[str, Any]:
+                with self.lock:
+                    success_rate = (
+                        self.successful_requests / self.total_requests * 100
+                        if self.total_requests > 0 else 0
+                    )
+                    return {
+                        'bot_id': self.bot_id,
+                        'total_requests': self.total_requests,
+                        'successful_requests': self.successful_requests,
+                        'failed_requests': self.failed_requests,
+                        'success_rate': success_rate,
+                        'queue_size': len(self.task_queue)
+                    }
+
+      validation_test: "tests/test_thread_bot_agent.py"
+      validation_checks:
+        - "Bot thread starts successfully"
+        - "Bot can process single task"
+        - "Heartbeat prevents CPU saturation"
+        - "Thread-safe task submission works"
+        - "Thread stops gracefully"
+        - "No race conditions in metrics"
+
+      failure_action: "RUN_RECOVERY_THREAD_001"
+
+    - id: "THREAD_002"
+      file: "core/thread_swarm_manager.py"
+      description: "Create threading-based swarm manager with staggered starts"
+      template: |
+        '''
+        Threading swarm manager with emergence support
+        Implements Z8 heartbeat pattern for smooth CPU usage
+        '''
+        import threading
+        import time
+        import yaml
+        import psutil
+        from typing import List, Dict, Any
+        from core.thread_bot_agent import ThreadBotAgent, BotResponse
+
+        class ThreadSwarmManager:
+            def __init__(self, config_path: str = "config/swarm_config.yaml"):
+                self.config = self._load_config(config_path)
+                self.bots: List[ThreadBotAgent] = []
+                self.running = False
+
+                # Heartbeat configuration from Z8 pattern
+                self.heartbeat_interval = self.config.get('swarm', {}).get('heartbeat_interval', 0.1)
+                self.spawn_stagger = self.config.get('swarm', {}).get('spawn_stagger_seconds', 0.05)
+
+            def _load_config(self, config_path: str) -> Dict[str, Any]:
+                with open(config_path, 'r') as f:
+                    return yaml.safe_load(f)
+
+            def spawn_bot(self, bot_id: int) -> bool:
+                '''Spawn single bot thread'''
+                try:
+                    bot = ThreadBotAgent(
+                        bot_id=bot_id,
+                        model=self.config['model']['name'],
+                        config={
+                            'ollama_host': self.config['ollama']['host'],
+                            'context_length': self.config['model']['context_length'],
+                            'temperature': self.config['model']['temperature'],
+                            'heartbeat_interval': self.heartbeat_interval
+                        }
+                    )
+
+                    bot.start()
+                    self.bots.append(bot)
+
+                    print(f"✅ Bot {bot_id} thread started")
+                    return True
+
+                except Exception as e:
+                    print(f"❌ Failed to spawn bot {bot_id}: {e}")
+                    return False
+
+            def spawn_swarm_staggered(self, count: int) -> int:
+                '''
+                Spawn bots with staggered timing to prevent thundering herd
+                This is the Z8 pattern that smooths CPU spikes
+                '''
+                print(f"\\n🚀 Spawning {count} bots with staggered starts...")
+                print(f"   Heartbeat: {self.heartbeat_interval}s")
+                print(f"   Spawn stagger: {self.spawn_stagger}s\\n")
+
+                successful = 0
+                for i in range(count):
+                    if self.spawn_bot(i):
+                        successful += 1
+
+                    # Stagger spawns to prevent initial CPU spike
+                    time.sleep(self.spawn_stagger)
+
+                print(f"\\n✅ {successful}/{count} bots spawned successfully\\n")
+                return successful
+
+            def broadcast_task(self, prompt: str):
+                '''Send task to all bots (concurrent execution)'''
+                for bot in self.bots:
+                    bot.submit_task(prompt)
+
+            def collect_results(self) -> List[BotResponse]:
+                '''Collect results from all bots'''
+                all_results = []
+                for bot in self.bots:
+                    results = bot.get_results()
+                    all_results.extend(results)
+                return all_results
+
+            def run_concurrent_test(self, prompts: List[str], duration_seconds: int) -> Dict[str, Any]:
+                '''
+                Run concurrent test with true parallel execution
+                This enables emergence through simultaneous interactions
+                '''
+                print(f"\\n{'='*80}")
+                print(f"🧪 CONCURRENT TEST: {len(self.bots)} bots, {duration_seconds}s")
+                print(f"{'='*80}\\n")
+
+                start_time = time.time()
+                iteration = 0
+                total_tasks = 0
+
+                while time.time() - start_time < duration_seconds:
+                    iteration += 1
+
+                    # Broadcast prompts to all bots concurrently
+                    for prompt in prompts:
+                        self.broadcast_task(prompt)
+                        total_tasks += len(self.bots)
+
+                    # Wait for heartbeat cycle
+                    time.sleep(self.heartbeat_interval * 2)
+
+                    # Collect results
+                    results = self.collect_results()
+
+                    elapsed = time.time() - start_time
+                    remaining = duration_seconds - elapsed
+                    print(f"  Iteration {iteration} | Results: {len(results)} | "
+                          f"Remaining: {remaining:.1f}s")
+
+                    # Small delay between iterations
+                    time.sleep(0.5)
+
+                # Collect final results
+                final_results = self.collect_results()
+                total_time = time.time() - start_time
+
+                # Aggregate metrics
+                metrics = self.get_swarm_metrics()
+
+                results_summary = {
+                    'bot_count': len(self.bots),
+                    'duration': total_time,
+                    'total_tasks_submitted': total_tasks,
+                    'total_results': len(final_results),
+                    'swarm_metrics': metrics,
+                    'concurrency_model': 'threading',
+                    'heartbeat_interval': self.heartbeat_interval
+                }
+
+                print(f"\\n{'='*80}")
+                print(f"✅ CONCURRENT TEST COMPLETE")
+                print(f"{'='*80}\\n")
+
+                return results_summary
+
+            def get_swarm_metrics(self) -> Dict[str, Any]:
+                '''Aggregate metrics from all bots'''
+                bot_metrics = [bot.get_metrics() for bot in self.bots]
+
+                total_requests = sum(m['total_requests'] for m in bot_metrics)
+                successful_requests = sum(m['successful_requests'] for m in bot_metrics)
+
+                return {
+                    'total_bots': len(self.bots),
+                    'active_bots': sum(1 for b in self.bots if b.running),
+                    'total_requests': total_requests,
+                    'successful_requests': successful_requests,
+                    'aggregate_success_rate': (
+                        successful_requests / total_requests * 100
+                        if total_requests > 0 else 0
+                    ),
+                    'per_bot_metrics': bot_metrics
+                }
+
+            def shutdown(self):
+                '''Gracefully shutdown all bot threads'''
+                print(f"\\n🛑 Shutting down {len(self.bots)} bot threads...")
+                for bot in self.bots:
+                    bot.stop()
+                print("✅ All bots stopped\\n")
+
+      validation_test: "tests/test_thread_swarm_manager.py"
+      validation_checks:
+        - "Can spawn 2 bots with staggered starts"
+        - "Staggering prevents CPU spike"
+        - "All bots receive broadcast tasks"
+        - "Concurrent execution verified (multiple threads active)"
+        - "Graceful shutdown works"
+
+      failure_action: "RUN_RECOVERY_THREAD_002"
+
+  recovery_procedures:
+    RUN_RECOVERY_THREAD_001:
+      description: "Thread bot implementation failed"
+      steps:
+        - "Review threading.Lock usage for race conditions"
+        - "Check if Ollama client is thread-safe"
+        - "Test with single bot first"
+        - "Compare against asyncio backup implementation"
+        - "If 3 failures: REQUEST HUMAN REVIEW with error logs"
+      max_retries: 3
+
+    RUN_RECOVERY_THREAD_002:
+      description: "Thread swarm manager failed"
+      steps:
+        - "Verify THREAD_001 is complete and working"
+        - "Test with 1 bot before scaling to 2+"
+        - "Check for thread deadlocks"
+        - "Review Z8 Swarm-100 reference implementation"
+        - "If 3 failures: REQUEST HUMAN REVIEW"
+      max_retries: 3
+
+  success_criteria:
+    - "thread_bot_agent.py passes all unit tests"
+    - "thread_swarm_manager.py passes all unit tests"
+    - "Staggered spawning prevents CPU spikes"
+    - "True concurrent execution verified"
+    - "Phase 1 checkpoint written"
+
+# ============================================================================
+# PHASE 2: EMERGENCE VALIDATION TESTS
+# ============================================================================
+phase_2_emergence_validation:
+  name: "Validate Emergence Properties"
+  checkpoint: ".checkpoints/migration_phase_2_complete.json"
+  requires: ".checkpoints/migration_phase_2_complete.json"
+  critical: true
+
+  emergence_tests:
+    - id: "EMERGE_001"
+      name: "Verify True Concurrent Execution"
+      description: "Confirm multiple bots execute simultaneously, not sequentially"
+      test_script: "tests/test_concurrency_verification.py"
+      method: |
+        '''
+        Test concurrent execution by:
+        1. Spawn 4 bots with 2-second tasks
+        2. Submit tasks to all bots simultaneously
+        3. Measure total completion time
+        4. Sequential would take 8s, concurrent should take ~2s
+        '''
+      validation:
+        expected: "Total time < 3 seconds (proving parallelism)"
+        metric: "total_time_seconds"
+        threshold: 3.0
+      failure_action: "CRITICAL_FAILURE_NOT_CONCURRENT"
+
+    - id: "EMERGE_002"
+      name: "Verify CPU Core Utilization"
+      description: "Confirm all 10 performance cores are utilized"
+      test_script: "tests/test_cpu_utilization.py"
+      method: |
+        '''
+        Monitor CPU usage during 24-bot test:
+        1. Record per-core utilization
+        2. Verify at least 8 of 10 P-cores show >20% usage
+        3. Compare against asyncio baseline (only 6 cores)
+        '''
+      validation:
+        expected: "At least 8 performance cores active (cores 5-14)"
+        metric: "active_performance_cores"
+        threshold: 8
+      failure_action: "RUN_RECOVERY_EMERGE_002"
+
+    - id: "EMERGE_003"
+      name: "Verify Temporal Overlap"
+      description: "Confirm bot execution windows overlap (not sequential)"
+      test_script: "tests/test_temporal_overlap.py"
+      method: |
+        '''
+        Measure execution timing overlap:
+        1. Record start/end timestamp for each bot task
+        2. Calculate overlap coefficient
+        3. Asyncio has ~0% overlap, threading should have 80%+ overlap
+        '''
+      validation:
+        expected: "Temporal overlap > 70%"
+        metric: "overlap_percentage"
+        threshold: 70.0
+      failure_action: "RUN_RECOVERY_EMERGE_003"
+
+    - id: "EMERGE_004"
+      name: "Heartbeat CPU Smoothing Validation"
+      description: "Verify heartbeat prevents CPU spikes (Z8 pattern)"
+      test_script: "tests/test_heartbeat_smoothing.py"
+      method: |
+        '''
+        Compare CPU patterns:
+        1. Run without heartbeat: Record CPU spike variance
+        2. Run with heartbeat: Record CPU smoothness
+        3. Heartbeat should reduce variance by >50%
+        '''
+      validation:
+        expected: "CPU variance reduction > 50% with heartbeat"
+        metric: "variance_reduction_percentage"
+        threshold: 50.0
+      failure_action: "RUN_RECOVERY_EMERGE_004"
+
+    - id: "EMERGE_005"
+      name: "Thread Synchronization Test"
+      description: "Verify natural synchronization emerges"
+      test_script: "tests/test_thread_synchronization.py"
+      method: |
+        '''
+        Test for emergent synchronization:
+        1. Spawn 10 bots with shared state
+        2. Bots update state without explicit coordination
+        3. Measure if bots naturally synchronize access patterns
+        4. Threading should show synchronization pressure
+        '''
+      validation:
+        expected: "Evidence of synchronization patterns"
+        metric: "synchronization_events_detected"
+        threshold: 5
+      failure_action: "LOG_WARNING_CONTINUE"
+
+    - id: "EMERGE_006"
+      name: "Compare Threading vs Asyncio Performance"
+      description: "Direct comparison of both implementations"
+      test_script: "tests/test_threading_vs_asyncio.py"
+      method: |
+        '''
+        Run identical workload on both:
+        1. Load baseline_asyncio.json from Phase 0
+        2. Run threading implementation with same parameters
+        3. Compare: throughput, CPU cores used, timing patterns
+        '''
+      validation:
+        expected:
+          - "Threading uses more cores (8+ vs 6)"
+          - "Threading shows higher parallelism coefficient"
+          - "Threading enables true concurrency"
+      metrics:
+        - "cores_used_threading > cores_used_asyncio"
+        - "parallelism_threading > parallelism_asyncio"
+      failure_action: "RUN_RECOVERY_EMERGE_006"
+
+  recovery_procedures:
+    CRITICAL_FAILURE_NOT_CONCURRENT:
+      description: "Threading does not provide concurrency"
+      steps:
+        - "Check if Python has GIL issues"
+        - "Verify Ollama client releases GIL during I/O"
+        - "Test with multiprocessing instead of threading"
+        - "ABORT MIGRATION - Request human review"
+      max_retries: 0
+
+    RUN_RECOVERY_EMERGE_002:
+      description: "Insufficient CPU core utilization"
+      steps:
+        - "Increase OLLAMA_NUM_PARALLEL to 10"
+        - "Verify thread affinity is not restricted"
+        - "Check if threads are blocked on I/O"
+        - "Retry test"
+      max_retries: 2
+
+    RUN_RECOVERY_EMERGE_003:
+      description: "Low temporal overlap"
+      steps:
+        - "Reduce heartbeat interval to increase activity"
+        - "Verify threads are not serializing on locks"
+        - "Check for blocking I/O"
+        - "Retry test"
+      max_retries: 2
+
+    RUN_RECOVERY_EMERGE_004:
+      description: "Heartbeat not smoothing CPU"
+      steps:
+        - "Adjust heartbeat interval (try 0.05s, 0.1s, 0.2s)"
+        - "Verify staggered spawning is working"
+        - "Check if too many threads for CPU count"
+        - "Retry test"
+      max_retries: 2
+
+    RUN_RECOVERY_EMERGE_006:
+      description: "Threading not outperforming asyncio"
+      steps:
+        - "Review implementation for blocking operations"
+        - "Check if GIL is causing contention"
+        - "Consider multiprocessing as alternative"
+        - "Document findings and request human review"
+      max_retries: 1
+
+  success_criteria:
+    - "EMERGE_001: True concurrency verified (< 3s completion)"
+    - "EMERGE_002: 8+ cores utilized during test"
+    - "EMERGE_003: >70% temporal overlap achieved"
+    - "EMERGE_004: Heartbeat reduces CPU variance by >50%"
+    - "EMERGE_005: Synchronization patterns detected (or logged)"
+    - "EMERGE_006: Threading outperforms asyncio on key metrics"
+    - "Phase 2 checkpoint written with all test results"
+
+# ============================================================================
+# PHASE 3: INTEGRATION & CUTOVER
+# ============================================================================
+phase_3_integration:
+  name: "Replace Asyncio with Threading Implementation"
+  checkpoint: ".checkpoints/migration_phase_3_complete.json"
+  requires: ".checkpoints/migration_phase_2_complete.json"
+  rollback_available: true
+
+  cutover_steps:
+    - id: "CUTOVER_001"
+      name: "Update Configuration for Threading"
+      file: "config/swarm_config.yaml"
+      changes:
+        add:
+          swarm:
+            concurrency_model: "threading"  # Was: asyncio
+            heartbeat_interval: 0.1
+            spawn_stagger_seconds: 0.05
+        update:
+          ollama:
+            num_parallel: 10  # Increased from 6 for threading
+      validation:
+        test: "Config loads and has threading parameters"
+        command: "python3 -c 'import yaml; c=yaml.safe_load(open(\"config/swarm_config.yaml\")); print(c[\"swarm\"][\"concurrency_model\"])'"
+        expected: "threading"
+      failure_action: "ROLLBACK_CUTOVER"
+
+    - id: "CUTOVER_002"
+      name: "Replace bot_agent.py with Threading Version"
+      actions:
+        - "git commit -am 'Pre-cutover checkpoint'"
+        - "cp core/thread_bot_agent.py core/bot_agent.py"
+        - "Update imports in tests and swarm_manager"
+      validation:
+        test: "bot_agent.py is ThreadBotAgent implementation"
+        command: "grep -q 'class ThreadBotAgent' core/bot_agent.py"
+        expected: "ThreadBotAgent class found"
+      rollback_action: "git checkout core/bot_agent.py"
+      failure_action: "ROLLBACK_CUTOVER"
+
+    - id: "CUTOVER_003"
+      name: "Replace swarm_manager.py with Threading Version"
+      actions:
+        - "cp core/thread_swarm_manager.py core/swarm_manager.py"
+        - "Update all test imports"
+      validation:
+        test: "swarm_manager.py is ThreadSwarmManager"
+        command: "grep -q 'class ThreadSwarmManager' core/swarm_manager.py"
+        expected: "ThreadSwarmManager class found"
+      rollback_action: "git checkout core/swarm_manager.py"
+      failure_action: "ROLLBACK_CUTOVER"
+
+    - id: "CUTOVER_004"
+      name: "Run Full Integration Test Suite"
+      actions:
+        - "python3 tests/test_bot_agent.py"
+        - "python3 tests/test_swarm_manager.py"
+        - "python3 tests/test_swarm_load.py --bots 24 --duration 30"
+      validation:
+        test: "All tests pass with threading implementation"
+        expected: "0 failures, success rate > 80%"
+      failure_action: "ROLLBACK_CUTOVER"
+
+    - id: "CUTOVER_005"
+      name: "Capture Threading Performance Baseline"
+      actions:
+        - "python3 tests/test_swarm_load.py --bots 24 --duration 60 --output baseline_threading.json"
+      validation:
+        test: "New baseline captured successfully"
+        expected: "baseline_threading.json exists"
+      metrics_to_verify:
+        - "cores_used > 8"
+        - "concurrency_model == 'threading'"
+        - "success_rate > 80%"
+      failure_action: "LOG_ERROR_CONTINUE"
+
+  rollback_procedure:
+    ROLLBACK_CUTOVER:
+      description: "Cutover failed, reverting to asyncio"
+      steps:
+        - "git checkout core/bot_agent.py core/swarm_manager.py"
+        - "git checkout config/swarm_config.yaml"
+        - "Verify asyncio implementation still works"
+        - "python3 tests/test_bot_agent.py"
+        - "Document failure reason"
+        - "REQUEST HUMAN REVIEW before retry"
+      verification:
+        test: "Asyncio implementation functional after rollback"
+        expected: "Tests pass with asyncio"
+
+  success_criteria:
+    - "All files cutover to threading implementation"
+    - "Configuration updated for threading"
+    - "All integration tests pass"
+    - "Threading baseline captured"
+    - "No regressions in functionality"
+    - "Phase 3 checkpoint written"
+
+# ============================================================================
+# PHASE 4: PROGRESSIVE SCALING VALIDATION
+# ============================================================================
+phase_4_scaling_validation:
+  name: "Validate Threading at Scale with Emergence"
+  checkpoint: ".checkpoints/migration_phase_4_complete.json"
+  requires: ".checkpoints/migration_phase_3_complete.json"
+
+  scaling_tests:
+    - stage: 1
+      name: "Baseline: 6 Bots Threading"
+      bot_count: 6
+      duration: 30
+      expected:
+        success_rate: 95
+        cores_utilized: 6
+        emergence_detected: true
+      validation_script: "tests/test_scale_threading.py --bots 6"
+
+    - stage: 2
+      name: "Medium: 12 Bots Threading"
+      bot_count: 12
+      duration: 30
+      expected:
+        success_rate: 90
+        cores_utilized: 10
+        emergence_detected: true
+      validation_script: "tests/test_scale_threading.py --bots 12"
+
+    - stage: 3
+      name: "High: 24 Bots Threading"
+      bot_count: 24
+      duration: 30
+      expected:
+        success_rate: 85
+        cores_utilized: 10
+        emergence_detected: true
+      validation_script: "tests/test_scale_threading.py --bots 24"
+
+    - stage: 4
+      name: "Stress: 50 Bots Threading"
+      bot_count: 50
+      duration: 60
+      expected:
+        success_rate: 75
+        cores_utilized: 14
+        emergence_detected: true
+      validation_script: "tests/test_scale_threading.py --bots 50"
+      optional: true
+
+  emergence_validation_per_stage:
+    checks:
+      - "Temporal overlap > 70%"
+      - "Multiple cores simultaneously active"
+      - "Synchronization patterns visible"
+      - "CPU smoothing from heartbeat"
+    failure_threshold: "2 of 4 checks must pass"
+
+  success_criteria:
+    - "Stages 1-3 pass with expected metrics"
+    - "Stage 4 attempted (success optional)"
+    - "Emergence validated at each stage"
+    - "No critical errors"
+    - "Phase 4 checkpoint written"
+
+# ============================================================================
+# PHASE 5: DOCUMENTATION & COMPARISON REPORT
+# ============================================================================
+phase_5_documentation:
+  name: "Generate Migration Report & Documentation"
+  checkpoint: ".checkpoints/migration_phase_5_complete.json"
+  requires: ".checkpoints/migration_phase_4_complete.json"
+
+  outputs:
+    - file: "docs/THREADING_MIGRATION_REPORT.md"
+      description: "Complete migration analysis and results"
+      includes:
+        - "Asyncio vs Threading comparison"
+        - "Performance metrics before/after"
+        - "Emergence validation results"
+        - "CPU utilization improvements"
+        - "Recommendations for optimization"
+
+    - file: "docs/EMERGENCE_VALIDATION.md"
+      description: "Proof of emergent behaviors"
+      includes:
+        - "Temporal overlap analysis"
+        - "Synchronization patterns detected"
+        - "Multi-core utilization evidence"
+        - "Comparison with Z8 baseline"
+
+    - file: "config/threading_production.yaml"
+      description: "Optimized production configuration"
+      includes:
+        - "Validated bot counts"
+        - "Optimal heartbeat settings"
+        - "Ollama parallel configuration"
+        - "Resource limits"
+
+  comparison_metrics:
+    asyncio_baseline:
+      file: "baseline_asyncio.json"
+    threading_final:
+      file: "baseline_threading.json"
+    metrics_to_compare:
+      - "CPU cores utilized"
+      - "Temporal concurrency"
+      - "Success rate"
+      - "Throughput"
+      - "Emergence indicators"
+
+  success_criteria:
+    - "All documentation generated"
+    - "Comparison shows threading advantages"
+    - "Emergence validated and documented"
+    - "Production config ready"
+    - "Phase 5 checkpoint written"
+
+# ============================================================================
+# AI AGENT EXECUTION PROTOCOLS
+# ============================================================================
+ai_agent_protocols:
+  critical_rules:
+    - "NEVER skip emergence validation tests"
+    - "NEVER proceed if concurrency is not verified"
+    - "ALWAYS backup before cutover"
+    - "ALWAYS test rollback procedure"
+    - "Document all emergence evidence"
+
+  error_handling:
+    - "Log every threading-related error with stack trace"
+    - "Compare against Z8 Swarm-100 when stuck"
+    - "Request human review after 3 failed attempts"
+    - "Document race conditions immediately"
+
+  validation_discipline:
+    - "Run emergence tests after every change"
+    - "Verify CPU utilization with Activity Monitor"
+    - "Compare temporal patterns with asyncio baseline"
+    - "Test rollback before declaring success"
+
+  human_intervention_triggers:
+    - "Threading does not provide true concurrency (EMERGE_001 fails)"
+    - "Cannot achieve >70% temporal overlap (EMERGE_003 fails)"
+    - "Rollback fails during cutover"
+    - "Race conditions or deadlocks detected"
+    - "3 consecutive test failures"
+
+# ============================================================================
+# SUCCESS CRITERIA - OVERALL MIGRATION
+# ============================================================================
+overall_success:
+  required:
+    - "All phases 0-4 complete"
+    - "Emergence validated (EMERGE_001-005 pass)"
+    - "Threading outperforms asyncio"
+    - "8+ CPU cores utilized"
+    - "No critical errors"
+    - "Rollback tested and functional"
+
+  optimal:
+    - "Phase 5 documentation complete"
+    - "50+ bot capacity validated"
+    - "All emergence indicators positive"
+    - "Production config generated"
+
+  proof_of_success:
+    evidence_required:
+      - "baseline_threading.json shows >8 cores used"
+      - "Temporal overlap >70% measured"
+      - "CPU history shows all P-cores active"
+      - "Z8 pattern successfully replicated"
+      - "Emergent behaviors documented"
+
+# ============================================================================
+# REFERENCES
+# ============================================================================
+references:
+  z8_baseline: "https://github.com/MrSnowNB/Swarm-100"
+  m3_current: "https://github.com/MrSnowNB/M3-Swarm"
+  research:
+    - "Swarm intelligence requires concurrent interactions"
+    - "Asyncio provides cooperative, not preemptive multitasking"
+    - "Threading enables true parallelism for I/O-bound tasks"
+    - "Heartbeat pattern prevents resource contention"
+    - "Emergent timing requires overlapping execution windows"

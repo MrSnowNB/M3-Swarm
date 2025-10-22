@@ -687,6 +687,5 @@ After resolving any issue:
 with open("swarm_macos/docs/TROUBLESHOOTING.md", "w") as f:
     f.write(troubleshooting_guide)
 
-created_files.append("docs/TROUBLESHOOTING.md")
 print("✅ Created: docs/TROUBLESHOOTING.md")
 print("   → Comprehensive troubleshooting guide for AI agents")

@@ -283,6 +283,5 @@ class SwarmManager:
 with open("swarm_macos/core/swarm_manager_template.py", "w") as f:
     f.write(swarm_manager_template)
 
-created_files.append("core/swarm_manager_template.py")
 print("✅ Created: core/swarm_manager_template.py")
 print("   → Template for swarm orchestration")

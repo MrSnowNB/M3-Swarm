@@ -465,6 +465,5 @@ This build system is designed to catch mistakes early and provide clear recovery
 with open("swarm_macos/docs/AI_AGENT_GUIDE.md", "w") as f:
     f.write(agent_guide)
 
-created_files.append("docs/AI_AGENT_GUIDE.md")
 print("✅ Created: docs/AI_AGENT_GUIDE.md")
 print("   → Complete execution guide for AI coding agents")

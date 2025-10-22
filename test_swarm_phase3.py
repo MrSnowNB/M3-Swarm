@@ -92,9 +92,12 @@ async def test_stage(bot_count: int, duration_seconds: int, required_success_rat
                     print(f"❌ Task error: {result}")
                 else:
                     batch_count += 1
-                    if result.success:
-                        batch_success += 1
-                        successful_tasks += 1
+                    try:
+                        if result.success:  # type: ignore
+                            batch_success += 1
+                            successful_tasks += 1
+                    except AttributeError:
+                        pass  # Invalid result object
                     total_tasks += 1
 
             # Progress report

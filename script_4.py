@@ -67,7 +67,6 @@ logging:
 with open("swarm_macos/config/swarm_config.yaml", "w") as f:
     f.write(swarm_config)
 
-created_files.append("config/swarm_config.yaml")
 print("✅ Created: config/swarm_config.yaml")
 
 # models.yaml
@@ -118,5 +117,4 @@ test_prompts:
 with open("swarm_macos/config/models.yaml", "w") as f:
     f.write(models_config)
 
-created_files.append("config/models.yaml")
 print("✅ Created: config/models.yaml")

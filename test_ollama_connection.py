@@ -30,7 +30,10 @@ def test_connection():
         print(f"\n📋 Available models: {len(models_list)}")
 
         for model in models_list:
-            print(f"  - {model.model} ({model.details.parameter_size}, {model.details.quantization_level})")
+            if model.details:
+                print(f"  - {model.model} ({model.details.parameter_size}, {model.details.quantization_level})")
+            else:
+                print(f"  - {model.model} (details unavailable)")
 
         # Check for gemma3:270m
         model_names = [m.model for m in models_list]

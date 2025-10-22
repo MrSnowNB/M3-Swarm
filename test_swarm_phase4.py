@@ -44,7 +44,9 @@ async def run_full_swarm_validation(target_bots: int = 50) -> dict:
             return {'success': False, 'error': 'Failed to spawn any bots'}
 
         spawn_rate = spawned / spawn_time if spawn_time > 0 else 0
-        print(".2f"
+        print(f"   Spawned {spawned} bots in {spawn_time:.2f}s")
+        print(f"   Spawn rate: {spawn_rate:.2f} bots/sec")
+
         # Load configuration for test prompts
         config = manager.config
         test_prompts = config.get('test_prompts', {}).get('complex', [])
@@ -106,6 +108,7 @@ async def run_full_swarm_validation(target_bots: int = 50) -> dict:
                 batch_success = 0
                 batch_fail = 0
                 batch_times = []
+                avg_batch_time = 0.0
 
                 for i, result in enumerate(results):
                     if isinstance(result, Exception):
@@ -115,8 +118,8 @@ async def run_full_swarm_validation(target_bots: int = 50) -> dict:
                         batch_success += 1
                         total_tasks += 1
                         successful_tasks += 1
-                        batch_times.append(result.response_time)
-                        response_times.append(result.response_time)
+                        batch_times.append(result.response_time)  # type: ignore
+                        response_times.append(result.response_time)  # type: ignore
 
                 if batch_success > 0:
                     avg_batch_time = sum(batch_times) / len(batch_times)
@@ -167,8 +170,8 @@ async def run_full_swarm_validation(target_bots: int = 50) -> dict:
             'system_limits_reached': spawned < target_bots
         }
 
-        print("
-        🎯 FINAL RESULTS"        print(f"{'='*50}")
+        print("\n🎯 FINAL RESULTS")
+        print(f"{'='*50}")
         print(f"Target Bots: {target_bots}")
         print(f"Bots Spawned: {spawned}")
         print(f"Success Rate: {success_rate:.2f}%")
@@ -193,6 +196,13 @@ async def run_full_swarm_validation(target_bots: int = 50) -> dict:
         print(f"💾 Phase 4 checkpoint saved: {checkpoint_file}")
 
         return results
+
+    except asyncio.CancelledError:
+        print(f"❌ Full swarm validation cancelled")
+        return {'success': False, 'error': 'Operation cancelled'}
+    except Exception as e:
+        print(f"❌ Full swarm validation failed: {e}")
+        return {'success': False, 'error': str(e)}
 
     finally:
         # Cleanup

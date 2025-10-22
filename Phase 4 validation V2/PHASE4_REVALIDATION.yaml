@@ -1,0 +1,305 @@
+---
+# ============================================================================
+# PHASE 4: PARALLELISM REVALIDATION & PROOF
+# ============================================================================
+# Version: 1.0.0
+# Purpose: Empirically prove threading implementation provides true parallelism
+# Status: VERIFICATION REQUIRED - Claims unverified until tests pass
+# Execution: make verify-parallel
+# ============================================================================
+
+metadata:
+  phase: "Phase 4 - Revalidation"
+  verification_type: "empirical_proof"
+  criticality: "BLOCKING - Cannot proceed to production without passing"
+  previous_claims:
+    - "Threading implementation complete"
+    - "24 parallel bots operational"
+    - "Asyncio replaced with threading"
+  verification_status: "UNVERIFIED - Awaiting test results"
+
+verification_requirements:
+  must_prove:
+    - "Code uses threading, not asyncio"
+    - "4 bots × 2s tasks complete in < 3s (true parallelism)"
+    - "Thread count ≥ 24 during 24-bot test"
+    - "CPU cores ≥ 8 active during 24-bot test"
+    - "Threading outperforms asyncio baseline"
+
+  cannot_proceed_until:
+    - "ALL 4 verification gates pass"
+    - "Results signed and timestamped"
+    - "Evidence bundle generated"
+
+# ============================================================================
+# VERIFICATION GATE 1: CODE AUDIT
+# ============================================================================
+gate_1_code_audit:
+  name: "Verify Threading Implementation (Not Asyncio)"
+  script: "tests/verify_code_audit.py"
+  timeout: 30
+
+  checks:
+    - id: "AUDIT_001"
+      name: "Count async/await usage"
+      command: "grep -r 'async def\|await\|asyncio' core/ tests/ --include='*.py' | wc -l"
+      store_as: "asyncio_line_count"
+
+    - id: "AUDIT_002"
+      name: "Count threading usage"
+      command: "grep -r 'threading\.Thread\|concurrent\.futures\|Queue' core/ tests/ --include='*.py' | wc -l"
+      store_as: "threading_line_count"
+
+    - id: "AUDIT_003"
+      name: "Check bot_agent.py uses threading"
+      command: "grep -q 'threading.Thread' core/bot_agent.py"
+      expected: "exit code 0 (found)"
+
+    - id: "AUDIT_004"
+      name: "Check swarm_manager.py uses threading"
+      command: "grep -q 'threading.Thread' core/swarm_manager.py"
+      expected: "exit code 0 (found)"
+
+  success_criteria:
+    - "threading_line_count > asyncio_line_count"
+    - "bot_agent.py contains threading.Thread"
+    - "swarm_manager.py contains threading.Thread"
+
+  failure_actions:
+    if_asyncio_dominant: "ABORT - Still using asyncio, not threading"
+    if_no_threading: "ABORT - No threading implementation found"
+
+  output: ".checkpoints/gate1_code_audit_results.json"
+
+# ============================================================================
+# VERIFICATION GATE 2: CONCURRENCY PROOF TEST (CRITICAL)
+# ============================================================================
+gate_2_concurrency_proof:
+  name: "Empirical Parallelism Proof (CPU-Bound Test)"
+  script: "tests/verify_concurrency_proof.py"
+  timeout: 60
+  critical: true
+
+  test_design:
+    description: "4 bots execute 2-second CPU-bound tasks simultaneously"
+    theory:
+      true_parallel: "All 4 tasks run at once → ~2 seconds total"
+      false_parallel: "Tasks run sequentially → ~8 seconds total"
+    threshold: 3.0
+
+  implementation:
+    spawn_bots: 4
+    task_type: "CPU-bound (sum calculations, not I/O)"
+    task_duration: 2.0
+    measure: "wall clock time from start to all complete"
+
+  validation:
+    metric: "elapsed_time_seconds"
+    pass_threshold: "< 3.0 seconds"
+    fail_threshold: ">= 3.0 seconds"
+
+  interpretation:
+    if_under_3s: "TRUE PARALLELISM VERIFIED ✅"
+    if_3_to_5s: "PARTIAL PARALLELISM (investigate bottleneck)"
+    if_over_5s: "FALSE PARALLELISM - Sequential execution ❌"
+
+  abort_on_failure: true
+  failure_message: "CRITICAL: Threading does not provide true parallelism"
+
+  output: ".checkpoints/gate2_concurrency_proof_results.json"
+
+# ============================================================================
+# VERIFICATION GATE 3: THREAD COUNT VERIFICATION
+# ============================================================================
+gate_3_thread_count:
+  name: "Verify Thread Count Matches Bot Count"
+  script: "tests/verify_thread_count.py"
+  timeout: 90
+
+  test_procedure:
+    - "Spawn 24 bots"
+    - "Wait for all bots to be active"
+    - "Sample thread count every 1 second for 30 seconds"
+    - "Calculate average and minimum thread count"
+
+  validation:
+    metric: "average_thread_count"
+    pass_threshold: ">= 24 threads"
+    warning_threshold: ">= 20 threads"
+    fail_threshold: "< 20 threads"
+
+  interpretation:
+    if_24_plus: "VERIFIED - One thread per bot ✅"
+    if_20_to_24: "PARTIAL - Most bots threaded (investigate)"
+    if_under_20: "FAILED - Not using threading ❌"
+
+  additional_checks:
+    - "threading.active_count() during test"
+    - "psutil.Process().num_threads() verification"
+
+  output: ".checkpoints/gate3_thread_count_results.json"
+
+# ============================================================================
+# VERIFICATION GATE 4: CPU CORE UTILIZATION
+# ============================================================================
+gate_4_cpu_utilization:
+  name: "Verify Multi-Core CPU Utilization"
+  script: "tests/verify_cpu_cores.py"
+  timeout: 120
+
+  test_procedure:
+    - "Start 24-bot swarm test"
+    - "Sample per-core CPU usage every 1 second for 60 seconds"
+    - "Calculate average utilization per core"
+    - "Count cores with >20% average utilization"
+
+  validation:
+    metric: "cores_with_high_utilization"
+    pass_threshold: ">= 8 cores"
+    warning_threshold: ">= 6 cores"
+    fail_threshold: "< 6 cores"
+
+  interpretation:
+    if_10_plus: "EXCELLENT - All P-cores utilized ✅"
+    if_8_to_10: "GOOD - Most P-cores utilized ✅"
+    if_6_to_8: "PARTIAL - Only Ollama cores (investigate)"
+    if_under_6: "FAILED - Not using multiple cores ❌"
+
+  additional_metrics:
+    - "Total CPU percentage"
+    - "Per-core utilization distribution"
+    - "P-core vs E-core utilization"
+
+  output: ".checkpoints/gate4_cpu_utilization_results.json"
+
+# ============================================================================
+# VERIFICATION GATE 5: BASELINE COMPARISON
+# ============================================================================
+gate_5_baseline_comparison:
+  name: "Compare Threading vs Asyncio Performance"
+  script: "tests/verify_baseline_comparison.py"
+  timeout: 60
+
+  data_sources:
+    asyncio_baseline: ".checkpoints/baseline_asyncio.json"
+    threading_results: ".checkpoints/baseline_threading.json"
+
+  comparisons:
+    - metric: "thread_count"
+      asyncio_expected: "< 3"
+      threading_expected: ">= 20"
+
+    - metric: "cores_utilized"
+      asyncio_expected: "~6"
+      threading_expected: ">= 8"
+
+    - metric: "temporal_concurrency"
+      asyncio_expected: "0-10%"
+      threading_expected: ">= 70%"
+
+    - metric: "throughput"
+      threading_must: "outperform asyncio"
+
+  validation:
+    must_improve_on: ["thread_count", "cores_utilized", "temporal_concurrency"]
+
+  output: ".checkpoints/gate5_comparison_results.json"
+
+# ============================================================================
+# FINAL VERIFICATION BUNDLE
+# ============================================================================
+verification_bundle:
+  name: "Phase 4 Parallelism Verification Evidence Bundle"
+  output: ".checkpoints/PHASE4_VERIFICATION_BUNDLE.json"
+
+  includes:
+    - "All 5 gate results"
+    - "Signed timestamp"
+    - "Pass/fail summary"
+    - "Evidence files"
+    - "System configuration"
+
+  signing:
+    method: "SHA256 hash of all results"
+    timestamp: "ISO 8601 UTC"
+    system_info:
+      - "Platform (macOS ARM64)"
+      - "CPU cores (14)"
+      - "Python version"
+      - "Git commit hash"
+
+  pass_criteria:
+    required_gates:
+      - "Gate 1: Code Audit (PASS)"
+      - "Gate 2: Concurrency Proof < 3s (PASS)"
+      - "Gate 3: Thread Count >= 24 (PASS)"
+      - "Gate 4: CPU Cores >= 8 (PASS)"
+    optional_gates:
+      - "Gate 5: Baseline Comparison (PASS)"
+
+  failure_handling:
+    if_any_gate_fails: "VERIFICATION FAILED - Bundle marked invalid"
+    if_gate_2_fails: "CRITICAL FAILURE - No true parallelism"
+    action: "Generate failure report with diagnostic recommendations"
+
+# ============================================================================
+# AI AGENT EXECUTION PROTOCOL
+# ============================================================================
+ai_agent_protocol:
+  command: "make verify-parallel"
+
+  execution_sequence:
+    - "Run Gate 1: Code Audit"
+    - "Run Gate 2: Concurrency Proof (abort if fails)"
+    - "Run Gate 3: Thread Count"
+    - "Run Gate 4: CPU Utilization"
+    - "Run Gate 5: Baseline Comparison"
+    - "Generate verification bundle"
+    - "Sign and timestamp results"
+
+  success_actions:
+    - "Mark Phase 4 as VERIFIED"
+    - "Generate success report"
+    - "Update README with verified status"
+    - "Proceed to production deployment"
+
+  failure_actions:
+    - "Mark Phase 4 as FAILED"
+    - "Generate diagnostic report"
+    - "Log failure reasons"
+    - "REQUEST HUMAN REVIEW"
+
+  human_intervention_triggers:
+    - "Gate 2 fails (not truly parallel)"
+    - "Any 2 gates fail"
+    - "Verification bundle cannot be generated"
+
+# ============================================================================
+# SUCCESS CRITERIA
+# ============================================================================
+overall_success:
+  required:
+    - "Gate 1 PASS: Threading code verified"
+    - "Gate 2 PASS: Concurrency test < 3s"
+    - "Gate 3 PASS: Thread count >= 24"
+    - "Gate 4 PASS: CPU cores >= 8"
+    - "Verification bundle generated and signed"
+
+  proof_standard:
+    type: "Empirical evidence required"
+    level: "Cannot be faked or simulated"
+    reproducible: "Results must be reproducible"
+
+  final_deliverable:
+    file: ".checkpoints/PHASE4_VERIFICATION_BUNDLE.json"
+    status: "SIGNED and TIMESTAMPED"
+    validity: "Cryptographic hash prevents tampering"
+
+# ============================================================================
+# REFERENCES
+# ============================================================================
+references:
+  issue: "Claimed parallelism unverified - only 6 cores active"
+  solution: "Empirical verification with 5 gates"
+  critical_test: "Gate 2 concurrency proof (< 3s = parallel)"
+  date: "2025-10-22"

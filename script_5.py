@@ -184,6 +184,5 @@ class BotAgent:
 with open("swarm_macos/core/bot_agent_template.py", "w") as f:
     f.write(bot_agent_template)
 
-created_files.append("core/bot_agent_template.py")
 print("✅ Created: core/bot_agent_template.py")
 print("   → Template for AI agent to implement")
