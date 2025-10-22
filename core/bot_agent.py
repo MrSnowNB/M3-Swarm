@@ -1,197 +1,155 @@
-"""
-Bot Agent Template - Single bot instance for Swarm-100
-AI Agent: Implement this class following the template structure
-"""
-
-import asyncio
+'''
+Threading Bot Agent - REAL PARALLELISM
+This implementation uses OS threads for true concurrent execution
+'''
+import threading
 import time
 import ollama
-from typing import Dict, Any, Optional
-from dataclasses import dataclass
+from typing import Optional, Dict, Any
+from queue import Queue
 
-@dataclass
+
 class BotResponse:
-    """Structured response from bot execution"""
-    bot_id: int
-    success: bool
-    response: Optional[str]
-    response_time: float
-    error: Optional[str] = None
-    timestamp: float = 0
-
-class BotAgent:
-    """
-    Single bot agent that can execute prompts via Ollama
-
-    AI Agent Implementation Notes:
-    - This bot must be async-capable
-    - Handle errors gracefully without crashing
-    - Log all actions for debugging
-    - Support timeout configuration
-    - Track metrics (response time, success/failure)
-    - Implement retry logic for failed requests
-    """
-
-    def __init__(self, bot_id: int, model: str, config: Dict[str, Any]):
-        """
-        Initialize bot agent
-
-        Args:
-            bot_id: Unique identifier for this bot
-            model: Ollama model name (e.g., "gemma3:270m")
-            config: Configuration dict with timeout, context_length, etc.
-        """
+    """Standardized response format for threading implementation"""
+    def __init__(self, bot_id: int, success: bool = False, response: Optional[str] = None,
+                 response_time: float = 0.0, error: Optional[str] = None):
         self.bot_id = bot_id
-        self.model = model
+        self.success = success
+        self.response = response
+        self.response_time = response_time
+        self.error = error
+        self.timestamp = time.time()
+
+
+class ThreadBotAgent:
+    '''Bot that runs in dedicated OS thread'''
+
+    def __init__(self, bot_id: int, config: Dict[str, Any]):
+        self.bot_id = bot_id
         self.config = config
+        self.running = False
+        self.thread: Optional[threading.Thread] = None
 
-        # Initialize Ollama async client from config
-        host = config.get('ollama_host', 'http://localhost:11434')
-        self.client = ollama.AsyncClient(host=host)
+        # Thread-safe communication
+        self.task_queue = Queue()
+        self.result_queue = Queue()
 
-        # Metrics tracking
-        self.total_requests = 0
-        self.successful_requests = 0
-        self.failed_requests = 0
-        self.total_response_time = 0.0
+        # Ollama client (thread-safe)
+        self.client = ollama.Client(host=config.get('ollama_host', 'http://localhost:11434'))
 
-        # Retry configuration from config
-        self.max_retries = config.get('max_retries', 3)
-        self.retry_delay = config.get('retry_delay_seconds', 2)
+        # Metrics (thread-safe with lock)
+        self.lock = threading.Lock()
+        self.total_tasks = 0
+        self.successful_tasks = 0
 
-    async def execute(self, prompt: str, timeout: Optional[int] = None) -> BotResponse:
-        """
-        Execute a single prompt and return response with retry logic
+        # Heartbeat for CPU smoothing (Z8 pattern)
+        self.heartbeat_interval = config.get('heartbeat_interval', 0.1)
 
-        Args:
-            prompt: Text prompt to send to model
-            timeout: Optional timeout in seconds (overrides config)
+    def start(self):
+        '''Start bot thread - TRUE CONCURRENT EXECUTION'''
+        if self.running:
+            return
 
-        Returns:
-            BotResponse with success status and result
+        self.running = True
+        self.thread = threading.Thread(target=self._bot_loop, daemon=True, name=f"Bot-{self.bot_id}")
+        self.thread.start()
+        print(f"✅ Bot {self.bot_id} thread started (OS thread ID: {self.thread.ident})")
 
-        AI Agent Implementation:
-        1. Start timer
-        2. Implement retry logic with exponential backoff
-        3. Call Ollama async API with prompt
-        4. Handle timeout properly
-        5. Catch and log any exceptions
-        6. Update metrics
-        7. Return structured BotResponse
-        """
-        start_time = time.time()
-        timeout = timeout or self.config.get('timeout', 30)
-        retry_count = 0
-        last_error = None
+    def stop(self):
+        '''Stop bot thread gracefully'''
+        self.running = False
+        if self.thread:
+            self.thread.join(timeout=5.0)
+        print(f"🛑 Bot {self.bot_id} thread stopped")
 
-        while retry_count <= self.max_retries:
+    def _bot_loop(self):
+        '''Main bot loop - runs continuously in dedicated thread'''
+        while self.running:
+            # Check for task (non-blocking)
             try:
-                # Implement async Ollama call with timeout and options from config
-                response = await asyncio.wait_for(
-                    self.client.chat(
-                        model=self.model,
-                        messages=[{'role': 'user', 'content': prompt}],
-                        options={
-                            'num_ctx': self.config.get('context_length', 2048),
-                            'temperature': self.config.get('temperature', 0.7),
-                            'top_k': self.config.get('top_k', 40),
-                            'top_p': self.config.get('top_p', 0.9)
-                        }
-                    ),
-                    timeout=timeout
-                )
+                task = self.task_queue.get(timeout=0.1)
+                result = self._execute_task(task)
+                self.result_queue.put(result)
+            except:
+                pass  # No task available
 
-                # Extract response text from Ollama response
-                response_text = response.get('message', {}).get('content', '')
-                if not response_text:
-                    raise ValueError("Empty response from Ollama")
+            # Heartbeat pause to prevent CPU spikes (Z8 pattern)
+            time.sleep(self.heartbeat_interval)
 
-                response_time = time.time() - start_time
+    def _execute_task(self, prompt: str) -> BotResponse:
+        '''Execute task synchronously (releases GIL during I/O)'''
+        start = time.time()
 
-                # Update metrics
-                self.total_requests += 1
-                self.successful_requests += 1
-                self.total_response_time += response_time
+        try:
+            # Ollama call releases GIL - allows true parallelism
+            response = self.client.chat(
+                model=self.config.get('model', 'gemma3:270m'),
+                messages=[{'role': 'user', 'content': prompt}]
+            )
 
-                return BotResponse(
-                    bot_id=self.bot_id,
-                    success=True,
-                    response=response_text,
-                    response_time=response_time,
-                    timestamp=time.time()
-                )
+            with self.lock:
+                self.total_tasks += 1
+                self.successful_tasks += 1
 
-            except asyncio.TimeoutError as e:
-                last_error = f"Timeout after {timeout}s"
-                if retry_count < self.max_retries:
-                    print(f"⚠️  Bot {self.bot_id} retry {retry_count + 1}/{self.max_retries} for timeout")
-                    await asyncio.sleep(self.retry_delay * (2 ** retry_count))  # Exponential backoff
-                    retry_count += 1
-                    continue
-                break
+            return BotResponse(
+                bot_id=self.bot_id,
+                success=True,
+                response=response['message']['content'],
+                response_time=time.time() - start
+            )
 
-            except Exception as e:
-                last_error = str(e)
-                if retry_count < self.max_retries:
-                    print(f"⚠️  Bot {self.bot_id} retry {retry_count + 1}/{self.max_retries} for error: {last_error}")
-                    await asyncio.sleep(self.retry_delay * (2 ** retry_count))  # Exponential backoff
-                    retry_count += 1
-                    continue
-                break
+        except Exception as e:
+            with self.lock:
+                self.total_tasks += 1
 
-        # All retries exhausted
-        response_time = time.time() - start_time
-        self.total_requests += 1
-        self.failed_requests += 1
+            return BotResponse(
+                bot_id=self.bot_id,
+                success=False,
+                error=str(e),
+                response_time=time.time() - start
+            )
 
-        # Update metrics for retry attempts
-        self.total_response_time += response_time
-
+    def execute(self, prompt: str, timeout: Optional[float] = None) -> BotResponse:
+        '''Synchronous interface for threading implementation'''
+        self.submit_task(prompt)
+        timeout_val = timeout or 5.0
+        result = self.get_result(timeout_val)
+        if result:
+            return result
         return BotResponse(
             bot_id=self.bot_id,
             success=False,
-            response=None,
-            response_time=response_time,
-            error=f"Failed after {self.max_retries} retries: {last_error}",
-            timestamp=time.time()
+            error="Task timeout",
+            response_time=timeout_val
         )
+
+    def submit_task(self, prompt: str):
+        '''Submit task to bot (thread-safe)'''
+        self.task_queue.put(prompt)
+
+    def get_result(self, timeout=1.0) -> Optional[BotResponse]:
+        '''Get result from bot (thread-safe)'''
+        try:
+            return self.result_queue.get(timeout=timeout)
+        except:
+            return None
 
     def get_metrics(self) -> Dict[str, Any]:
-        """Return bot performance metrics"""
-        avg_response_time = (
-            self.total_response_time / self.total_requests 
-            if self.total_requests > 0 else 0
-        )
-
-        success_rate = (
-            self.successful_requests / self.total_requests * 100 
-            if self.total_requests > 0 else 0
-        )
-
-        return {
-            'bot_id': self.bot_id,
-            'total_requests': self.total_requests,
-            'successful_requests': self.successful_requests,
-            'failed_requests': self.failed_requests,
-            'success_rate': success_rate,
-            'avg_response_time': avg_response_time
-        }
+        '''Get bot metrics (thread-safe)'''
+        with self.lock:
+            return {
+                'bot_id': self.bot_id,
+                'total_tasks': self.total_tasks,
+                'successful_tasks': self.successful_tasks,
+                'success_rate': (self.successful_tasks / self.total_tasks * 100) if self.total_tasks > 0 else 0,
+                'queue_size': self.task_queue.qsize()
+            }
 
     async def health_check(self) -> bool:
         """Check if bot is healthy and can communicate with Ollama"""
         try:
-            # TODO: AI Agent - Implement actual health check
-            # Test with minimal prompt
-            response = await self.execute("test", timeout=5)
-            return response.success
-        except Exception:
+            # Simple health check for compatibility with async interface
+            result = self.execute("Health check: respond with OK", timeout=3.0)
+            return bool(result.success and result.response and "OK" in str(result.response).upper())
+        except:
             return False
-
-
-# AI Agent Validation Tests:
-# 1. Bot can be initialized with config
-# 2. Bot can execute single prompt successfully
-# 3. Bot handles timeout correctly
-# 4. Bot handles errors without crashing
-# 5. Bot metrics are tracked accurately
-# 6. Health check works

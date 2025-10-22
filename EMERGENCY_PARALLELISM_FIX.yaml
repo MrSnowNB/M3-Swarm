@@ -137,8 +137,8 @@ phase_0_diagnostic:
       validation:
         metric: "elapsed_time_seconds"
         threshold: 3.0
-        expected: "< 3.0 seconds = TRUE PARALLELISM"
-        expected: ">= 3.0 seconds = FALSE PARALLELISM (asyncio)"
+        pass_criteria: "< 3.0 seconds = TRUE PARALLELISM"
+        fail_criteria: ">= 3.0 seconds = FALSE PARALLELISM (asyncio)"
 
       result_action:
         if_passed: "TRUE_PARALLELISM_VERIFIED - Continue to investigate 6-core limit"

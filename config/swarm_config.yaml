@@ -3,6 +3,9 @@
 
 swarm:
   name: "Swarm-100-MacOS"
+  concurrency_model: "threading"
+  heartbeat_interval: 0.1
+  spawn_stagger_seconds: 0.05
   max_concurrent_bots: 12  # Start conservative, scale based on testing
   batch_size: 6
   total_bot_target: 100
