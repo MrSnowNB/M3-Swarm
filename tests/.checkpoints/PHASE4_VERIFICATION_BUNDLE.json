@@ -1,0 +1,60 @@
+{
+  "bundle_version": "1.0.0",
+  "generated_at": "2025-10-22T14:05:38.335260Z",
+  "phase": "Phase 4 - Parallelism Revalidation",
+  "system": {
+    "platform": "Darwin",
+    "architecture": "arm64",
+    "python_version": "3.14.0",
+    "git_commit": "5b24ede675a2c6e04b9a0a1dc555ecfe7fec325c"
+  },
+  "gate_results": {
+    "gate_1_code_audit": {
+      "gate": "1_code_audit",
+      "timestamp": "2025-10-22T13:57:00.583069Z",
+      "checks": {
+        "asyncio_line_count": 0,
+        "threading_line_count": 0,
+        "bot_agent_threading": false,
+        "swarm_manager_threading": false
+      },
+      "passed": false,
+      "summary": {
+        "threading_dominant": false,
+        "bot_agent_ok": false,
+        "swarm_manager_ok": false
+      }
+    },
+    "gate_2_concurrency_proof": {
+      "error": "Could not load .checkpoints/gate2_concurrency_proof_results.json: [Errno 2] No such file or directory: '.checkpoints/gate2_concurrency_proof_results.json'"
+    },
+    "gate_3_thread_count": {
+      "error": "Could not load .checkpoints/gate3_thread_count_results.json: [Errno 2] No such file or directory: '.checkpoints/gate3_thread_count_results.json'"
+    },
+    "gate_4_cpu_utilization": {
+      "error": "Could not load .checkpoints/gate4_cpu_utilization_results.json: [Errno 2] No such file or directory: '.checkpoints/gate4_cpu_utilization_results.json'"
+    },
+    "gate_5_baseline_comparison": {
+      "error": "Could not load .checkpoints/gate5_comparison_results.json: [Errno 2] No such file or directory: '.checkpoints/gate5_comparison_results.json'"
+    }
+  },
+  "gate_status": {
+    "gate_1_code_audit": "FAILED",
+    "gate_2_concurrency_proof": "ERROR",
+    "gate_3_thread_count": "ERROR",
+    "gate_4_cpu_utilization": "ERROR",
+    "gate_5_baseline_comparison": "ERROR"
+  },
+  "overall_status": {
+    "critical_gates_passed": false,
+    "gates_passed": 0,
+    "total_gates": 5,
+    "pass_rate": 0.0
+  },
+  "verdict": "FAILED",
+  "verification_level": "NONE",
+  "key_findings": [
+    "CRITICAL: No true parallelism (999.00s >= 3s threshold)"
+  ],
+  "signature": "630423c54ac29ce665bfa398dc5a3959c664be644cc5155b20eb357bc61ea84d"
+}
