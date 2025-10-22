@@ -1,0 +1,42 @@
+# Model configurations for different test scenarios
+
+models:
+  gemma3_270m:
+    name: "gemma3:270m"
+    parameters: 270000000
+    memory_footprint_gb: 0.5
+    recommended_context: 2048
+    max_context: 32768
+    use_case: "High concurrency testing"
+
+  gemma3_3b:
+    name: "gemma3:3b"
+    parameters: 3000000000
+    memory_footprint_gb: 2.5
+    recommended_context: 4096
+    max_context: 32768
+    use_case: "Medium concurrency, better quality"
+
+  llama32_3b:
+    name: "llama3.2:3b"
+    parameters: 3000000000
+    memory_footprint_gb: 2.5
+    recommended_context: 4096
+    max_context: 131072
+    use_case: "Alternative 3B model"
+
+test_prompts:
+  simple:
+    - "What is 2+2?"
+    - "Classify: This is great!"
+    - "Summarize: AI is transforming software."
+
+  medium:
+    - "Explain the concept of async programming in 2 sentences."
+    - "Extract key entities from: Apple announced new products in California yesterday."
+    - "Classify sentiment: The movie was disappointing but had good visuals."
+
+  complex:
+    - "Compare and contrast synchronous vs asynchronous programming paradigms."
+    - "Analyze this text for sentiment, entities, and key themes: {{text}}"
+    - "Generate a creative story about AI in 3 sentences."
