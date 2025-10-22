@@ -501,6 +501,5 @@ overall_success_criteria:
 with open("swarm_macos/AI_FIRST_BUILD.yaml", "w") as f:
     f.write(build_yaml)
 
-created_files.append("AI_FIRST_BUILD.yaml")
 print("✅ Created: AI_FIRST_BUILD.yaml")
 print("   → Master build specification with gated phases and validation")

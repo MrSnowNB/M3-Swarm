@@ -79,7 +79,6 @@ if __name__ == "__main__":
 with open("swarm_macos/utils/check_resources.py", "w") as f:
     f.write(check_resources)
 
-created_files.append("utils/check_resources.py")
 print("✅ Created: utils/check_resources.py")
 
 # test_ollama_connection.py
@@ -142,7 +141,6 @@ if __name__ == "__main__":
 with open("swarm_macos/tests/test_ollama_connection.py", "w") as f:
     f.write(test_ollama)
 
-created_files.append("tests/test_ollama_connection.py")
 print("✅ Created: tests/test_ollama_connection.py")
 
 # diagnostics.py
@@ -289,5 +287,4 @@ class SystemDiagnostics:
 with open("swarm_macos/utils/diagnostics.py", "w") as f:
     f.write(diagnostics)
 
-created_files.append("utils/diagnostics.py")
 print("✅ Created: utils/diagnostics.py")

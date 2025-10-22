@@ -29,5 +29,4 @@ colorlog>=6.7.0
 with open("swarm_macos/requirements.txt", "w") as f:
     f.write(requirements_txt)
 
-created_files.append("requirements.txt")
 print("✅ Created: requirements.txt")

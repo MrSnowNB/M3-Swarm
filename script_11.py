@@ -290,7 +290,6 @@ rm -rf logs/* .checkpoints/*
 with open("swarm_macos/QUICKSTART.md", "w") as f:
     f.write(quickstart)
 
-created_files.append("QUICKSTART.md")
 print("✅ Created: QUICKSTART.md")
 print("   → Quick start guide for humans and AI agents")
 

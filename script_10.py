@@ -379,6 +379,5 @@ MIT License - See Swarm-100 repository
 with open("swarm_macos/README.md", "w") as f:
     f.write(main_readme)
 
-created_files.append("README.md")
 print("✅ Created: README.md")
 print("   → Main project documentation")

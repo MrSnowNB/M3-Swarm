@@ -39,7 +39,8 @@ async def test_bot():
         print(f"Response success: {response.success}")
 
         if response.success:
-            print(f"Response: {response.response[:100]}...")
+            response_text = response.response if response.response else "None"
+            print(f"Response: {response_text[:100]}...")
             print(f"Response time: {response.response_time:.2f}s")
 
             metrics = bot.get_metrics()

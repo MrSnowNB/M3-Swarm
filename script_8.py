@@ -94,7 +94,6 @@ if __name__ == "__main__":
 with open("swarm_macos/tests/test_bot_agent.py", "w") as f:
     f.write(test_bot_agent)
 
-created_files.append("tests/test_bot_agent.py")
 print("✅ Created: tests/test_bot_agent.py")
 
 # test_swarm_manager.py
@@ -174,7 +173,6 @@ if __name__ == "__main__":
 with open("swarm_macos/tests/test_swarm_manager.py", "w") as f:
     f.write(test_swarm)
 
-created_files.append("tests/test_swarm_manager.py")
 print("✅ Created: tests/test_swarm_manager.py")
 
 # test_swarm_load.py - for phase 3 progressive testing
@@ -255,5 +253,4 @@ if __name__ == "__main__":
 with open("swarm_macos/tests/test_swarm_load.py", "w") as f:
     f.write(test_load)
 
-created_files.append("tests/test_swarm_load.py")
 print("✅ Created: tests/test_swarm_load.py")

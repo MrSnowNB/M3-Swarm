@@ -10,4 +10,7 @@ models = client.list()
 print("Full API response:")
 print(models)
 print("\nType:", type(models))
-print("Keys:", models.keys() if hasattr(models, 'keys') else 'No keys method')
+try:
+    print("Keys:", models.keys())  # type: ignore
+except (AttributeError, TypeError):
+    print("Keys: No keys method")
