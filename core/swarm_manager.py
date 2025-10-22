@@ -202,7 +202,7 @@ class ThreadSwarmManager:
             'active_threads': threading.active_count()
         }
 
-    async def shutdown(self):
+    def shutdown(self):
         '''Stop all bot threads'''
         print(f"\n🛑 Shutting down {len(self.bots)} bot threads...")
         for bot in self.bots:
