@@ -1,6 +1,6 @@
 {
   "phase": "phase_3",
-  "timestamp": 1761136254.805729,
+  "timestamp": 1761139266.3163898,
   "status": "complete",
   "max_validated_capacity": 24,
   "stages_completed": 4,
@@ -8,45 +8,45 @@
     {
       "success": true,
       "stage": 2,
-      "duration": 30.243639945983887,
-      "total_tasks": 64,
-      "successful_tasks": 64,
+      "duration": 30.44566822052002,
+      "total_tasks": 66,
+      "successful_tasks": 66,
       "actual_success_rate": 100.0,
       "required_success_rate": 95,
-      "throughput": 2.12,
+      "throughput": 2.17,
       "spawned_bots": 2
     },
     {
       "success": true,
       "stage": 6,
-      "duration": 30.525014877319336,
+      "duration": 30.803756952285767,
       "total_tasks": 116,
       "successful_tasks": 116,
       "actual_success_rate": 100.0,
       "required_success_rate": 90,
-      "throughput": 3.8,
+      "throughput": 3.77,
       "spawned_bots": 6
     },
     {
       "success": true,
       "stage": 12,
-      "duration": 30.741859912872314,
-      "total_tasks": 112,
-      "successful_tasks": 112,
+      "duration": 31.209203958511353,
+      "total_tasks": 108,
+      "successful_tasks": 108,
       "actual_success_rate": 100.0,
       "required_success_rate": 85,
-      "throughput": 3.64,
+      "throughput": 3.46,
       "spawned_bots": 12
     },
     {
       "success": true,
       "stage": 24,
-      "duration": 30.99816107749939,
-      "total_tasks": 120,
-      "successful_tasks": 120,
+      "duration": 30.563596725463867,
+      "total_tasks": 108,
+      "successful_tasks": 108,
       "actual_success_rate": 100.0,
       "required_success_rate": 80,
-      "throughput": 3.87,
+      "throughput": 3.53,
       "spawned_bots": 24
     }
   ]
