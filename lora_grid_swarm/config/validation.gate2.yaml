@@ -1,0 +1,78 @@
+# =============================================================================
+# Gate 2: Wave Propagation Validation Configuration
+# =============================================================================
+# Hardware-proof configuration for LoRA wave propagation validation
+
+gate_id: "gate_2"
+
+thresholds:
+  min_cpu_pct: 5.0        # Require sustained 5% CPU during propagation
+  min_duration_s: 0.5     # Minimum 0.5 seconds of real computation
+  min_io_ops: 3          # At least 3 disk operations for artifacts
+  require_gpu: false     # CPU-only for this gate
+
+signatures:
+  key_ref: "hardware"
+  algorithm: "sha256"
+  include_fingerprint: true
+
+chain:
+  require_previous_signature: true
+  # previous_signature will be set dynamically by validation runner
+  # This validates that Gate 1 passed and provides cryptographic chain
+  max_chain_depth: 5
+
+execution:
+  max_runtime_s: 60        # 1 minute maximum for propagation test
+  emergency_stop_on_low_cpu: true
+  progress_reporting: true
+  environment_check:
+    prevent_trace: true
+    validate_monotonic: true
+
+instrumentation:
+  metrics_interval_s: 1.0
+  artifact_base_path: ".checkpoints"
+  require_filesync: true
+  compression_enabled: false
+
+reporting:
+  enable_blockchain_anchoring: false
+  report_format: "json"
+  # external_url: "https://validation-api.example.com/report"  # Optional
+
+# Gate-specific parameters
+gate_specific:
+  propagation:
+    grid_size: 12          # 12x12 = 144 agents
+    steps_to_test: 50      # Check if wave reaches opposite corner within 50 steps
+    target_threshold: 0.1  # Minimum influence strength to count as "reached"
+    expected_min_steps: 10 # Fastest theoretical propagation
+    expected_max_steps: 50 # Latest acceptable propagation
+
+  validation_criteria:
+    propagation_measured: true    # Must measure actual propagation steps
+    computational_evidence: true  # Must show real grid operations
+    neighbor_influence: true      # Must validate neighbor communication
+    convergence_proven: true      # Must prove wave reaches target
+
+# Expected hardware consumption patterns (for verification)
+expected_patterns:
+  cpu_usage: "sustained 5-15% during grid operations"
+  memory_usage: "stable, <10MB delta during computation"
+  io_pattern: "artifact writes with fsync every few seconds"
+  timing: "regular computation intervals, no unrealistic pauses"
+
+# Security checks
+security:
+  prevent_unusual_execution: true
+  validate_process_isolation: true
+  check_for_debugger_attachments: true
+  ensure_no_tracing: true
+
+# Failure modes and their signatures
+failure_detection:
+  no_import_error: "signature: import_fail_{timestamp}"
+  low_cpu_detected: "signature: cpu_insufficient_{timestamp}"
+  timeout_exceeded: "signature: timeout_{timestamp}"
+  mock_detected: "signature: hallucination_{timestamp}"

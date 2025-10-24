@@ -1,0 +1,164 @@
+# =============================================================================
+# Hardware-Proof Validation Schema
+# =============================================================================
+# JSON Schema for hardware-verified scientific validation configuration
+# Ensures all required fields are present for tamper-evident testing
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://example.com/validation.schema.json"
+title: "Hardware-Proof Validation Configuration"
+description: "Schema for configuring hardware-verified scientific validation gates"
+type: object
+
+required:
+  - gate_id
+  - thresholds
+  - signatures
+  - chain
+  - execution
+
+properties:
+  gate_id:
+    type: string
+    description: "Unique identifier for this validation gate"
+    pattern: "^gate_[1-5]$"
+
+  thresholds:
+    type: object
+    description: "Minimum thresholds to prove hardware execution"
+    required:
+      - min_cpu_pct
+      - min_duration_s
+    properties:
+      min_cpu_pct:
+        type: number
+        minimum: 0.1
+        maximum: 100.0
+        description: "Minimum sustained CPU usage percentage"
+      min_duration_s:
+        type: number
+        minimum: 0.01
+        description: "Minimum execution duration in seconds"
+      min_io_ops:
+        type: integer
+        minimum: 0
+        description: "Minimum disk I/O operations required"
+      require_gpu:
+        type: boolean
+        description: "Whether GPU computation is required"
+
+  signatures:
+    type: object
+    description: "Cryptographic signing configuration"
+    required:
+      - key_ref
+    properties:
+      key_ref:
+        type: string
+        description: "Reference to signing key (hardware/software)"
+        enum: ["hardware", "software", "test"]
+      algorithm:
+        type: string
+        default: "sha256"
+        enum: ["sha256", "sha512"]
+      include_fingerprint:
+        type: boolean
+        default: true
+
+  chain:
+    type: object
+    description: "Validation chain configuration for multi-gate proofs"
+    properties:
+      require_previous_signature:
+        type: boolean
+        default: false
+        description: "Whether to validate previous gate's signature"
+      previous_signature:
+        type: string
+        pattern: "^[a-f0-9]{64}$"
+        description: "SHA256 signature from previous gate"
+      max_chain_depth:
+        type: integer
+        minimum: 1
+        maximum: 5
+        default: 5
+
+  execution:
+    type: object
+    description: "Execution parameters and anti-hallucination measures"
+    properties:
+      max_runtime_s:
+        type: integer
+        minimum: 10
+        default: 300
+        description: "Maximum allowed execution time"
+      emergency_stop_on_low_cpu:
+        type: boolean
+        default: true
+        description: "Stop execution if CPU drops below threshold"
+      progress_reporting:
+        type: boolean
+        default: true
+        description: "Report progress during execution"
+      environment_check:
+        type: object
+        properties:
+          prevent_trace:
+            type: boolean
+            default: true
+            description: "Prevent debug tracing during execution"
+          validate_monotonic:
+            type: boolean
+            default: true
+            description: "Validate wall-clock time is monotonic"
+
+  instrumentation:
+    type: object
+    description: "Instrumentation and monitoring configuration"
+    properties:
+      metrics_interval_s:
+        type: number
+        minimum: 0.1
+        default: 2.0
+        description: "How often to record metrics"
+      artifact_base_path:
+        type: string
+        default: ".checkpoints"
+      require_filesync:
+        type: boolean
+        default: true
+        description: "Use fsync for durable artifact writing"
+      compression_enabled:
+        type: boolean
+        default: false
+        description: "Enable result compression"
+
+  reporting:
+    type: object
+    description: "Result reporting and external verification"
+    properties:
+      external_url:
+        type: string
+        format: uri
+        description: "Optional URL for external verification reporting"
+      enable_blockchain_anchoring:
+        type: boolean
+        default: false
+        description: "Anchor results to blockchain for permanent proof"
+      report_format:
+        type: string
+        enum: ["json", "yaml", "xml"]
+        default: "json"
+
+additionalProperties: false
+
+# =============================================================================
+# Validation Examples and Notes
+# =============================================================================
+
+# The schema prevents common hallucination attacks:
+# 1. Missing thresholds - prevents no-op "passes"
+# 2. Chain validation - ensures sequential gate integrity
+# 3. Signature requirements - provides cryptographic proof
+# 4. Execution limits - prevents infinite hangs
+# 5. Environment checks - detects debugging/tracing

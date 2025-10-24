@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """
-Gate 2: Wave Propagation Validation
+Gate 2: Wave Propagation Validation - HARDWARE-PROOF
 
 Tests whether compressed LoRA state representation enables effective wave propagation
 across the 12×12 agent grid within acceptable time bounds (10-50 steps).
 
+HARDWARE REQUIREMENT: This test MUST execute on actual CPU with measurable resource consumption
+- Real LoRA matrix operations required (no theoretical fallbacks)
+- Physical hardware execution verification mandatory
+- Cryptographic proof of authentic hardware execution
+
 Gate Objective: Verify AΔB reconstruction preserves neighbor communication patterns
-Gate Criteria: Wave propagates from corner to opposite corner within 10-50 steps
-Gate Failure: Wave takes >50 steps or fails to propagate
+Gate Criteria: Wave propagates from corner to opposite corner within 10-50 steps AND hardware execution verified
+Gate Failure: Wave takes >50 steps, fails to propagate, OR execution appears hallucinated/theoretical
 """
 
 import sys
@@ -17,6 +22,9 @@ import time
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import hardware proof system
+from core.hardware_proof import require_hardware_execution, HardwareProof
 
 def test_wave_propagation():
     """
@@ -37,17 +45,15 @@ def test_wave_propagation():
     # Need to run this outside the lora_grid_swarm directory due to venv
     # Use direct imports with sys.path manipulation
 
-    # Import required components
+    # Import required components - FAIL HARD if not available
+    # NO theoretical fallbacks allowed - must execute on real hardware
     try:
         from core.lora_grid import LoRACompressedGrid
         from core.floating_agent import FloatingAgent
-        print("✅ Imports successful")
+        print("✅ Imports successful - proceeding with hardware execution")
     except ImportError as e:
-        # Fallback: create simulated test that validates gate 2 requirements
-        # Since we can't run the actual LoRA grid due to venv path issues
-        print(f"⚠️  Import issue: {e}")
-        print("🔄 Using theoretical validation approach for Gate 2")
-        return test_wave_propagation_theoretical()
+        # HARD FAILURE - no theoretical fallbacks
+        raise RuntimeError(f"❌ CRITICAL: Cannot import LoRA components. Hardware execution impossible: {e}")
 
     # Create LoRA grid and floating agents
     grid = LoRACompressedGrid(size=12, rank=4, decay_half_life=20)
@@ -83,9 +89,12 @@ def test_wave_propagation():
         target_influence = grid.get_influence(target_pos[0], target_pos[1])
         target_influence_log.append(target_influence)
 
+        print(f"Step {step}: influence at {target_pos} = {target_influence:.4f}")  # DEBUG
+
         # Check if wave reached target with sufficient strength (0.1 threshold)
         if target_influence >= 0.1:
             propagation_steps = step
+            print(f"✅ Wave reached target in {step} steps!")
             break
 
         # Apply LoRA decay
@@ -101,6 +110,8 @@ def test_wave_propagation():
         propagation_steps = None
         final_influence = target_influence_log[-1] if target_influence_log else 0.0
         print(f"❌ Propagation failed: max {max_steps} steps exceeded, final influence {final_influence:.3f}")
+
+    print(f"DEBUG: End of propagation loop, propagation_steps = {propagation_steps}")  # DEBUG
 
     # Determine gate outcome
     if propagation_steps is None:
@@ -201,6 +212,18 @@ def test_wave_propagation_theoretical():
 
     return test_result
 
+@require_hardware_execution
+def test_wave_propagation_hardware():
+    """
+    Hardware-verified LoRA wave propagation test.
+
+    This function is wrapped with @require_hardware_execution which ensures:
+    - Real CPU execution with measurable resource consumption
+    - No theoretical fallbacks - MUST run LoRA computations
+    - Cryptographic proof of hardware authenticity required
+    """
+    return test_wave_propagation()
+
 # ============================================================================
 # Gate 2 Execution Notes
 # ============================================================================
@@ -239,41 +262,65 @@ Gate 2 Validation Methodology:
 """
 
 if __name__ == "__main__":
-    print("🚀 LoRA Wave Propagation Gate Test Execution")
-    print("=" * 60)
+    print("🚀 LoRA Hardware-Verified Wave Propagation Gate Test Execution")
+    print("=" * 70)
+    print("HARDWARE REQUIREMENT: This test MUST execute real LoRA matrix operations!")
+    print("No theoretical fallbacks - execution WILL FAIL if components unavailable.")
+    print("=" * 70)
 
-    # Run the wave propagation test
-    test_result = test_wave_propagation()
+    # Run hardware-verified wave propagation test
+    complete_result = test_wave_propagation_hardware()
 
-    # Display results
-    print(f"\n🎯 Gate 2 Result: {'PASSED' if test_result['gate_passed'] else 'FAILED'}")
-    if 'propagation_steps' in test_result and test_result['propagation_steps']:
-        print(f"   Propagation Time: {test_result['propagation_steps']} steps")
-    print(f"   Required Range: 10-50 steps")
-    print(f"   Status: {'✅ SUCCESS' if test_result['gate_passed'] else '❌ FAILED'}")
+    # Debug: Check result structure
+    print(f"DEBUG: complete_result keys: {list(complete_result.keys()) if isinstance(complete_result, dict) else type(complete_result)}")
 
-    if test_result.get('reason'):
-        print(f"   Details: {test_result['reason']}")
+    # Extract the test result and hardware proofs
+    test_result = complete_result['test_result']
+    hardware_proofs = complete_result['hardware_proofs']
 
-    if test_result['gate_passed']:
-        print("\n🔬 Scientific Validation: LoRA compression preserves wave propagation!")
-        print("   • Information diffuses through compressed AΔB space")
-        print("   • Multi-agent coordination enabled without full state broadcast")
-        print("   • Emergent behavior possible in compressed representation")
-        print("   • Foundation for scalable distributed AI established")
+    # Debug result structure
+    print(f"DEBUG: test_result is None? {test_result is None}")
+    if test_result is not None:
+        print(f"DEBUG: test_result keys: {list(test_result.keys())}")
+        print(f"DEBUG: test_result type: {type(test_result)}")
+
+    # Display results with hardware verification info
+    print("\n🎯 HARDWARE-VERIFIED GATE STATUS:")
+    try:
+        print(f"   Test Result: {'PASSED' if test_result['gate_passed'] else 'FAILED'}")
+        if 'propagation_steps' in test_result and test_result['propagation_steps']:
+            print(f"   Propagation Steps: {test_result['propagation_steps']}")
+    except (KeyError, TypeError) as e:
+        print(f"   ERROR accessing test_result: {e}")
+        print(f"   test_result content: {test_result}")
+
+    print(f"   Execution Authenticity: {hardware_proofs['execution_authenticity']}")
+    print(f"   Proof Completeness: {complete_result['proof_completeness']}")
+
+    if hardware_proofs['execution_authenticity'] == 'HARDWARE_VERIFIED':
+        print("   ✅ HARDWARE EXECUTION CONFIRMED")
+        print(f"   📄 Artifact: {complete_result['final_artifacts']['artifact_file']}")
+        print(f"   🔐 Signature: {hardware_proofs['hardware_signature'][:16]}...")
     else:
-        print("\n⚠️  Propagation analysis inconclusive - review LoRA implementation")
+        print("   ⚠️  EXECUTION APPEARS HALLUCINATED OR MOCKED")
+        print("   This is expected if running without real LoRA components")
 
-    # Export for validation framework
-    output_file = '.checkpoints/gate_2_propagation_result.json'
+    # Save hardware-verified result
+    output_file = '.checkpoints/gate_2_propagation_hardware_verified.json'
     with open(output_file, 'w') as f:
-        json.dump(test_result, f, indent=2)
+        json.dump(complete_result, f, indent=2)
 
-    print(f"\n📄 Gate evidence saved: {output_file}")
+    print("\n📄 Hardware-verified evidence saved:")
+    print(f"   {output_file}")
 
-    if test_result['gate_passed']:
-        print("🏆 Gate 2 CERTIFIED: Wave propagation validated!")
-        print("🎯 Proceeding to Gate 3: Glider emergence test")
+    if test_result['gate_passed'] and hardware_proofs['execution_authenticity'] == 'HARDWARE_VERIFIED':
+        print("\n🏆 GATE 2 HARDWARE-CERTIFIED: LoRA wave propagation + real execution validated!")
+        print("🔬 Proved: Compressed state space enables emergent communication")
+        print("🎯 Proceeding to Gate 3: Hardware-verified glider emergence")
+    elif test_result['gate_passed']:
+        print("\n⚠️  GATE 2 PASSED but EXECUTION AUTHENTICITY QUESTIONABLE")
+        print("🔄 Test passed mathematically but may be hallucinated")
+        print("📝 This would require re-execution on verified hardware")
     else:
-        print("❌ Gate 2 ANALYSIS INCONCLUSIVE: Wave propagation needs validation")
-        print("🔄 Using theoretical validation - proceeding to Gate 3")
+        print("\n❌ GATE 2 FAILED: Wave propagation unsuccessful or execution failed")
+        print("🔄 Review LoRA implementation and ensure no theoretical fallbacks")
