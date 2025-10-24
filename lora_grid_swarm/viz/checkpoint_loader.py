@@ -20,7 +20,15 @@ class HardwareVerifiedCheckpointLoader:
     """
 
     def __init__(self):
-        self.checkpoints_base_path = Path(".checkpoints")
+        # Get the directory where this module is located
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        # Go up two levels: viz -> lora_grid_swarm -> root would be up/up/up, but wait
+        # __file__ = .../swarm test/lora_grid_swarm/viz/checkpoint_loader.py
+        # dirname(__file__) = swarm test/lora_grid_swarm/viz
+        # dirname(dirname(__file__)) = swarm test/lora_grid_swarm
+        # then / ".checkpoints"
+        lora_grid_swarm_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.checkpoints_base_path = Path(lora_grid_swarm_dir) / ".checkpoints"
 
     def load_gate_result(self, gate_id: int) -> Dict[str, Any]:
         """

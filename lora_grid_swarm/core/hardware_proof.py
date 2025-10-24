@@ -379,7 +379,7 @@ class HardwareProof:
             **signed_result,
             'final_artifacts': final_artifacts,
             'execution_duration_seconds': (datetime.now() - self.start_time).total_seconds(),
-            'proof_completeness': 'HARDWARE_VERIFIED' if signed_result['hardware_proofs']['execution_authenticity'] == 'HARDWARE_VERIFIED' else 'HALLUCINATION_RISK'
+            'proof_completeness': 'HARDWARE_VERIFIED_COMPLETE' if signed_result['hardware_proofs']['execution_authenticity'] == 'HARDWARE_VERIFIED' else 'HALLUCINATION_RISK'
         }
 
         return complete_proof

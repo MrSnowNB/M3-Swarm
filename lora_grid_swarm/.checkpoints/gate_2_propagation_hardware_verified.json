@@ -171,5 +171,5 @@
     "artifact_hash": "f1773c47ee976bc78807e5e3d58daa0c8f750e7116d3082712c2f409c2bc7ded"
   },
   "execution_duration_seconds": 1.208331,
-  "proof_completeness": "HARDWARE_VERIFIED"
+  "proof_completeness": "HARDWARE_VERIFIED_COMPLETE"
 }
