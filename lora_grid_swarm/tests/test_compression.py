@@ -5,16 +5,25 @@ Gate 1: LoRA Compression Ratio Validation
 Tests that LoRA compression achieves >100× state space reduction.
 This validates the core mathematical innovation enabling scalable swarm intelligence.
 
-Gate Objective: Prove that AΔB reconstruction compresses agent state efficiently
-Gate Criteria: >100× compression ratio achieved
-Gate Failure: Compression ratio ≤100×
+Gate Objective: Prove that AΔB reconstruction compresses agent state efficiently on REAL HARDWARE
+Gate Criteria: >100× compression ratio achieved with hardware-verified execution
+Gate Failure: Compression ratio ≤100× OR execution appears hallucinated/theoretical
+
+HARDWARE REQUIREMENTS:
+- Must execute on actual CPU with measured resource consumption
+- No theoretical fallbacks allowed
+- Cryptographic proof of hardware execution required
 """
 
 import sys
 import os
+import json
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import hardware proof system
+from core.hardware_proof import require_hardware_execution, HardwareProof
 
 def test_compression_ratio():
     """
@@ -150,31 +159,63 @@ LoRA Compression Gate Validation:
    - Proof of concept for LoRA-inspired multiagent systems
 """
 
+@require_hardware_execution
+def test_compression_ratio_hardware():
+    """
+    Hardware-verified LoRA compression ratio test.
+
+    This function is wrapped with @require_hardware_execution which ensures:
+    - Real CPU execution with measurable resource consumption
+    - Cryptographic proof of hardware authenticity
+    - No theoretical fallbacks allowed
+    """
+    return test_compression_ratio()
+
 if __name__ == "__main__":
-    print("🚀 LoRA Compression Ratio Gate Test Execution")
-    print("=" * 60)
+    print("🚀 LoRA Hardware-Verified Compression Ratio Gate Test Execution")
+    print("=" * 70)
+    print("HARDWARE REQUIREMENT: This test MUST execute on real hardware!")
+    print("No theoretical fallbacks - failure proves hallucination detection works.")
+    print("=" * 70)
 
-    # Run the compression test
-    test_result = test_compression_ratio()
+    # Run hardware-verified compression test
+    complete_result = test_compression_ratio_hardware()
 
-    # Display final results
-    print(f"\n🎯 FINAL GATE STATUS: {'PASSED' if test_result['gate_passed'] else 'FAILED'}")
-    print(",.1f")
-    print(f"   Evidence: {test_result['evidence']['compression_achievement']}")
+    # Extract the test result and hardware proofs
+    test_result = complete_result['test_result']
+    hardware_proofs = complete_result['hardware_proofs']
 
-    # Export for validation framework
-    import json
-    output_file = '.checkpoints/gate_1_compression_result.json'
-    test_result['validation_timestamp'] = None  # Set by superior framework
+    # Display results with hardware verification info
+    print("\n🎯 HARDWARE-VERIFIED GATE STATUS:")
+    print(f"   Test Result: {'PASSED' if test_result['gate_passed'] else 'FAILED'}")
+    print(f"   Best Compression: {test_result.get('best_compression_ratio', 0):.1f}×")
+    print(f"   Execution Authenticity: {hardware_proofs['execution_authenticity']}")
+    print(f"   Proof Completeness: {complete_result['proof_completeness']}")
 
-    with open(output_file, 'w') as f:
-        json.dump(test_result, f, indent=2)
-
-    print(f"📄 Gate evidence saved: {output_file}")
-
-    if test_result['gate_passed']:
-        print("\n🏆 Gate 1 CERTIFIED: LoRA compression validated!")
-        print("🎯 Proceeding to Gate 2: Wave propagation validation")
+    if hardware_proofs['execution_authenticity'] == 'HARDWARE_VERIFIED':
+        print("   ✅ HARDWARE EXECUTION CONFIRMED")
+        print(f"   📄 Artifact: {complete_result['final_artifacts']['artifact_file']}")
+        print(f"   🔐 Signature: {hardware_proofs['hardware_signature'][:16]}...")
     else:
-        print("\n❌ Gate 1 FAILED: LoRA compression insufficient")
-        print("🔄 Review rank parameters or LoRA implementation")
+        print("   ⚠️  EXECUTION APPEARS HALLUCINATED OR MOCKED")
+        print("   This is expected if running in non-hardware environment")
+
+    # Save hardware-verified result
+    output_file = '.checkpoints/gate_1_compression_hardware_verified.json'
+    with open(output_file, 'w') as f:
+        json.dump(complete_result, f, indent=2)
+
+    print("\n📄 Hardware-verified evidence saved:")
+    print(f"   {output_file}")
+
+    if test_result['gate_passed'] and hardware_proofs['execution_authenticity'] == 'HARDWARE_VERIFIED':
+        print("\n🏆 GATE 1 HARDWARE-CERTIFIED: LoRA compression + real execution validated!")
+        print("🔬 Proved: Scientific breakthrough on actual hardware")
+        print("🎯 Proceeding to Gate 2: Hardware-verified wave propagation")
+    elif test_result['gate_passed']:
+        print("\n⚠️  GATE 1 PASSED but EXECUTION AUTHENTICITY QUESTIONABLE")
+        print("🔄 Test passed mathematically but may be hallucinated")
+        print("📝 This would require re-execution on verified hardware")
+    else:
+        print("\n❌ GATE 1 FAILED: LoRA compression insufficient or execution failed")
+        print("🔄 Review LoRA parameters or hardware environment")
