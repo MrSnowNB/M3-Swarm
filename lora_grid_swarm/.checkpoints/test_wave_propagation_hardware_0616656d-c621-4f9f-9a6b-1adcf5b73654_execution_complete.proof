@@ -1,0 +1,70 @@
+{
+  "execution_id": "0616656d-c621-4f9f-9a6b-1adcf5b73654",
+  "hardware_challenge": {
+    "execution_id": "0616656d-c621-4f9f-9a6b-1adcf5b73654",
+    "hardware_fingerprint_hash": "f6063338d013eb0035fd1627824e9318b3050683d96fa0c79e08f4a7f9c31ba4",
+    "nonce": "5f9c777489e85417358e6bbf5f3e7edc92cb6378f5921e350083490f5e00425d",
+    "resource_baseline_hash": "9a7222fa0e6023d6e370ed55f3120bbbb721bf01ab8ade26bd065b8d9e8f951e",
+    "start_time": "2025-10-24T11:24:09.135460",
+    "test_name": "test_wave_propagation_hardware"
+  },
+  "phase": "execution_complete",
+  "proof_entropy": "6dbba53f8a9698998c4c6109ce97ca8d8a00cafc8c333429479c370133b15786",
+  "resource_snapshot": {
+    "active_processes": 768,
+    "cpu_percent": 9.8,
+    "cpu_times_percent": {
+      "idle": 93.1,
+      "system": 4.2,
+      "user": 2.8
+    },
+    "disk_io": {
+      "read_bytes": 1087636336128,
+      "read_count": 25877298,
+      "read_time": 10916247,
+      "write_bytes": 889826496512,
+      "write_count": 34118863,
+      "write_time": 5191992
+    },
+    "load_avg": [
+      2.20654296875,
+      2.47412109375,
+      2.73779296875
+    ],
+    "memory": {
+      "available": 14707064832,
+      "percent": 62.0,
+      "total": 38654705664,
+      "used": 17576099840
+    },
+    "net_io": {
+      "bytes_recv": 3594540032,
+      "bytes_sent": 4738134016,
+      "dropin": 0,
+      "dropout": 0,
+      "errin": 0,
+      "errout": 0,
+      "packets_recv": 220864943,
+      "packets_sent": 138551484
+    },
+    "threads_count": 768,
+    "timestamp": "2025-10-24T11:24:09.493656"
+  },
+  "system_fingerprint": {
+    "boot_time": 1755760031.0,
+    "chip_type": "Apple M3 Max",
+    "cpu_count": 14,
+    "hardware_uuid": "B0529170-6928-5B89-9265-D5189A6CBF2D",
+    "machine": "arm64",
+    "memory_total": 38654705664,
+    "physical_cpus": 14,
+    "pid": 65287,
+    "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+    "ppid": 1376,
+    "processor": "arm",
+    "serial_number": "J4X04067P1",
+    "timing_entropy": "16164c83c898137bbad1d2b4870fb2963f790a54a5fd08c2e2ba1c58c6e29097"
+  },
+  "test_name": "test_wave_propagation_hardware",
+  "timestamp": "2025-10-24T11:24:10.193924"
+}
