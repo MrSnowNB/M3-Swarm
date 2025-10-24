@@ -1,0 +1,3 @@
+# Minimal verification requirements
+psutil>=5.9.0
+pyyaml>=6.0

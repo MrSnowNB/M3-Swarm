@@ -1,0 +1,125 @@
+# =============================================================================
+# Master Validation Configuration
+# =============================================================================
+# Orchestrates hardware-proof validation across all LoRA gates
+# Provides chain validation, artifact management, and integrity checks
+
+validation_master:
+  version: "1.0.0"
+  description: "Hardware-proof LoRA Grid Swarm validation sequence"
+
+  global_defaults:
+    signatures:
+      key_ref: "hardware"
+      algorithm: "sha256"
+      include_fingerprint: true
+
+    execution:
+      max_runtime_s: 300  # 5 minutes per gate
+      emergency_stop_on_low_cpu: true
+      progress_reporting: true
+      environment_check:
+        prevent_trace: true
+        validate_monotonic: true
+
+    instrumentation:
+      metrics_interval_s: 2.0
+      artifact_base_path: ".checkpoints"
+      require_filesync: true
+      compression_enabled: false
+
+    reporting:
+      enable_blockchain_anchoring: false
+      report_format: "json"
+
+  gates:
+    - gate_id: "gate_1"
+      name: "Compression Validation"
+      config_file: "config/validation.gate1.yaml"
+      dependencies: []
+      outputs:
+        - signature: "gate1_complete.json/signature"
+        - artifacts: ["compression_results.json", "compression_hardware_verified.json"]
+
+    - gate_id: "gate_2"
+      name: "Wave Propagation"
+      config_file: "config/validation.gate2.yaml"
+      dependencies:
+        - gate_id: "gate_1"
+          signature_source: "gate_1/signature"
+      outputs:
+        - signature: "gate2_complete.json/signature"
+        - artifacts: ["propagation_results.json", "propagation_chain_verified.json"]
+
+    - gate_id: "gate_3"
+      name: "Glider Emergence"
+      config_file: "config/validation.gate3.yaml"
+      dependencies:
+        - gate_id: "gate_2"
+          signature_source: "gate_2/signature"
+      outputs:
+        - signature: "gate3_complete.json/signature"
+        - artifacts: ["glider_analysis.json", "emergence_patterns.json"]
+
+    - gate_id: "gate_4"
+      name: "Half-Life Decay"
+      config_file: "config/validation.gate4.yaml"
+      dependencies:
+        - gate_id: "gate_3"
+          signature_source: "gate_3/signature"
+      outputs:
+        - signature: "gate4_complete.json/signature"
+        - artifacts: ["decay_stability.json", "temporal_analysis.json"]
+
+    - gate_id: "gate_5"
+      name: "144-Agent Stability"
+      config_file: "config/validation.gate5.yaml"
+      dependencies:
+        - gate_id: "gate_4"
+          signature_source: "gate_4/signature"
+      outputs:
+        - signature: "gate5_complete.json/signature"
+        - artifacts: ["stability_benchmark.json", "full_scale_verification.json"]
+
+  integrity_checks:
+    chain_validation: true
+    artifact_verification: true
+    signature_chain_verification: true
+    temporal_consistency: true
+    hardware_consistency: true
+
+  emergency_procedures:
+    on_failure:
+      halt_execution: true
+      preserve_artifacts: true
+      log_incident: true
+      notify_external: false  # Set to true for production monitoring
+
+    on_timeout:
+      kill_process: true
+      generate_timeout_signature: true
+      mark_as_incomplete: true
+
+    on_hallucination_risk:
+      immediate_shutdown: true
+      forensics_capture: true
+      signature_revocation: true
+
+  success_criteria:
+    all_gates_pass: true
+    chain_integrity_maintained: true
+    hardware_proofs_complete: true
+    no_security_violations: true
+
+# =============================================================================
+# Usage Instructions
+# =============================================================================
+
+# Run complete validation sequence:
+#   python tools/run_validation.py --config config/validation.master.yaml
+#
+# Run individual gate:
+#   pytest tests/gates/test_gate2_propagation.py
+#
+# Validate results:
+#   python tools/validate_chain.py --artifacts .checkpoints/run_*/

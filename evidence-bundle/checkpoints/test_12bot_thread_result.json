@@ -1,0 +1,8 @@
+{
+  "test": "TEST_12_002",
+  "threading_active_count": 13,
+  "psutil_process_threads": 15,
+  "expected_minimum": 12,
+  "passed": true,
+  "evidence": "Active OS threads: 13 (\u226512 required)"
+}

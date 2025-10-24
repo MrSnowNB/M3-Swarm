@@ -1,0 +1,46 @@
+{
+  "test_name": "Gate 1: LoRA Compression Ratio",
+  "gate_criteria": ">100\u00d7 compression ratio",
+  "best_compression_ratio": 360.0,
+  "gate_passed": true,
+  "rank_results": {
+    "2": {
+      "rank": 2,
+      "grid_positions": 144,
+      "full_state_bytes": 11520,
+      "compressed_state_bytes": 32,
+      "compression_ratio": 360.0,
+      "compression_effective": true
+    },
+    "4": {
+      "rank": 4,
+      "grid_positions": 144,
+      "full_state_bytes": 11520,
+      "compressed_state_bytes": 128,
+      "compression_ratio": 90.0,
+      "compression_effective": false
+    },
+    "6": {
+      "rank": 6,
+      "grid_positions": 144,
+      "full_state_bytes": 11520,
+      "compressed_state_bytes": 288,
+      "compression_ratio": 40.0,
+      "compression_effective": false
+    },
+    "8": {
+      "rank": 8,
+      "grid_positions": 144,
+      "full_state_bytes": 11520,
+      "compressed_state_bytes": 512,
+      "compression_ratio": 22.5,
+      "compression_effective": false
+    }
+  },
+  "validation_timestamp": null,
+  "evidence": {
+    "theoretical_full_state": "11520 bytes (144 positions \u00d7 10 features \u00d7 8B)",
+    "compressed_state_best": "512 bytes (rank=8: 8\u00d78 matrix \u00d7 8B)",
+    "compression_achievement": "360.0\u00d7 achieved"
+  }
+}
