@@ -343,7 +343,7 @@ def validate_config_against_schema(config: Dict[str, Any], schema_path: str) -> 
     before starting validation runs.
     """
     try:
-        import jsonschema
+        import jsonschema  # type: ignore
     except ImportError:
         # Fallback validation without jsonschema
         required_keys = ['gate_id', 'thresholds', 'signatures']

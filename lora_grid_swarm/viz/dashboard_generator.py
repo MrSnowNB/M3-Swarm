@@ -87,7 +87,8 @@ class DashboardGenerator:
             print("WARNING: No data available for gate summary chart")
             return ""
 
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), height_ratios=[2, 1])
+        # At this point we know matplotlib is available due to MATPLOTLIB_AVAILABLE check
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), height_ratios=[2, 1])  # type: ignore
 
         # Execution time bar chart
         bars = ax1.bar(range(len(comparison_df)), comparison_df['execution_time'],
@@ -105,8 +106,8 @@ class DashboardGenerator:
                     f'{time:.2f}s', ha='center', va='bottom')
 
         # Pass/fail legend
-        legend_elements = [Rectangle((0,0),1,1, facecolor='green', edgecolor='black', label='PASSED'),
-                          Rectangle((0,0),1,1, facecolor='red', edgecolor='black', label='FAILED')]
+        legend_elements = [Rectangle((0,0),1,1, facecolor='green', edgecolor='black', label='PASSED'),  # type: ignore
+                          Rectangle((0,0),1,1, facecolor='red', edgecolor='black', label='FAILED')]  # type: ignore
         ax1.legend(handles=legend_elements, loc='upper right')
 
         # Authenticity table
@@ -130,14 +131,14 @@ class DashboardGenerator:
         table.set_fontsize(9)
         table.scale(1, 1.5)
 
-        plt.tight_layout()
+        plt.tight_layout()  # type: ignore
 
         # Add authenticity watermark
         self._add_watermark(fig)
 
         output_path = self.output_dir / output_filename
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        plt.close(fig)
+        plt.savefig(output_path, dpi=150, bbox_inches='tight')  # type: ignore
+        plt.close(fig)  # type: ignore
 
         return str(output_path)
 
@@ -151,11 +152,11 @@ class DashboardGenerator:
             print("WARNING: Cannot generate execution timeline - matplotlib not available")
             return ""
 
-        fig, ax = plt.subplots(figsize=(14, 8))
+        fig, ax = plt.subplots(figsize=(14, 8))  # type: ignore
 
         # Collect timeline data
         timeline_data = []
-        colors = cm.Set3.colors
+        colors = cm.Set3.colors  # type: ignore
 
         for i, gate_id in enumerate(gate_ids):
             try:
@@ -186,8 +187,8 @@ class DashboardGenerator:
                 print(f"WARNING: Could not get metrics for Gate {gate_id}: {e}")
 
         if not timeline_data:
-            plt.text(0.5, 0.5, 'No hardware-verified execution data available',
-                    ha='center', va='center', transform=ax.transAxes, fontsize=14)
+            ax.text(0.5, 0.5, 'No hardware-verified execution data available',
+                    ha='center', va='center', transform=ax.transAxes, fontsize=14)  # type: ignore
         else:
             # Sort by timestamp
             timeline_data.sort(key=lambda x: x['timestamp'])
@@ -200,7 +201,7 @@ class DashboardGenerator:
 
             # Scatter plot with size based on execution time
             sizes = [max(50, min(500, time * 10)) for time in execution_times]  # Scale for visibility
-            scatter = ax.scatter(timestamps, range(len(timeline_data)), s=sizes, c=colors_plot, alpha=0.7)
+            scatter = ax.scatter(timestamps, range(len(timeline_data)), s=sizes, c=colors_plot, alpha=0.7)  # type: ignore
 
             # Add gate labels
             for i, item in enumerate(timeline_data):
@@ -212,20 +213,20 @@ class DashboardGenerator:
             ax.set_yticklabels(gate_ids_display)
 
             # Format x-axis as timeline
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))  # type: ignore
             ax.set_xlabel('Execution Time (HH:MM:SS)')
-            plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)
+            plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)  # type: ignore
 
         ax.set_title('Hardware-Verified Gate Execution Timeline', fontsize=14, fontweight='bold')
 
-        plt.tight_layout()
+        plt.tight_layout()  # type: ignore
 
         # Add authenticity watermark
         self._add_watermark(fig)
 
         output_path = self.output_dir / output_filename
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        plt.close(fig)
+        plt.savefig(output_path, dpi=150, bbox_inches='tight')  # type: ignore
+        plt.close(fig)  # type: ignore
 
         return str(output_path)
 
@@ -240,7 +241,7 @@ class DashboardGenerator:
             print("WARNING: Cannot generate propagation comparison - matplotlib not available")
             return ""
 
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(10, 6))  # type: ignore
 
         # For now, just show hardware-verified gate results
         # In future implementations, this could compare with theoretical baselines
@@ -255,8 +256,8 @@ class DashboardGenerator:
                 print(f"WARNING: Could not get propagation data for Gate {gate_id}: {e}")
 
         if not propagation_data:
-            plt.text(0.5, 0.5, 'No hardware-verified propagation data available',
-                    ha='center', va='center', transform=ax.transAxes, fontsize=14)
+            ax.text(0.5, 0.5, 'No hardware-verified propagation data available',
+                    ha='center', va='center', transform=ax.transAxes, fontsize=14)  # type: ignore
         else:
             # Create simple comparison chart
             gates = [f"Gate {data['gate_id']}" for data in propagation_data]
@@ -271,21 +272,21 @@ class DashboardGenerator:
             for bar, time in zip(bars, times):
                 height = bar.get_height()
                 ax.text(bar.get_x() + bar.get_width()/2., height + 0.01,
-                       f'{time:.3f}s', ha='center', va='bottom', fontsize=10)
+                       f'{time:.3f}s', ha='center', va='bottom', fontsize=10)  # type: ignore
 
             # Add status labels
             for i, status in enumerate(statuses):
                 ax.text(i, 0.05, status, ha='center', va='bottom',
-                       transform=ax.transData, fontsize=9, style='italic')
+                       transform=ax.transData, fontsize=9, style='italic')  # type: ignore
 
-        plt.tight_layout()
+        plt.tight_layout()  # type: ignore
 
         # Add authenticity watermark
         self._add_watermark(fig)
 
         output_path = self.output_dir / output_filename
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        plt.close(fig)
+        plt.savefig(output_path, dpi=150, bbox_inches='tight')  # type: ignore
+        plt.close(fig)  # type: ignore
 
         return str(output_path)
 
@@ -540,7 +541,7 @@ class DashboardGenerator:
 
         return "\n".join(html_parts)
 
-    def validate_hardware_authenticity(self, gate_ids: List[int]) -> Dict[str, bool]:
+    def validate_hardware_authenticity(self, gate_ids: List[int]) -> Dict[int, bool]:
         """
         Validates all gate data comes from hardware-verified sources.
 
