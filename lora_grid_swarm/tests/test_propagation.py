@@ -278,11 +278,22 @@ if __name__ == "__main__":
     test_result = complete_result['test_result']
     hardware_proofs = complete_result['hardware_proofs']
 
+    # Debug result structure
+    print(f"DEBUG: test_result is None? {test_result is None}")
+    if test_result is not None:
+        print(f"DEBUG: test_result keys: {list(test_result.keys())}")
+        print(f"DEBUG: test_result type: {type(test_result)}")
+
     # Display results with hardware verification info
     print("\n🎯 HARDWARE-VERIFIED GATE STATUS:")
-    print(f"   Test Result: {'PASSED' if test_result['gate_passed'] else 'FAILED'}")
-    if 'propagation_steps' in test_result and test_result['propagation_steps']:
-        print(f"   Propagation Steps: {test_result['propagation_steps']}")
+    try:
+        print(f"   Test Result: {'PASSED' if test_result['gate_passed'] else 'FAILED'}")
+        if 'propagation_steps' in test_result and test_result['propagation_steps']:
+            print(f"   Propagation Steps: {test_result['propagation_steps']}")
+    except (KeyError, TypeError) as e:
+        print(f"   ERROR accessing test_result: {e}")
+        print(f"   test_result content: {test_result}")
+
     print(f"   Execution Authenticity: {hardware_proofs['execution_authenticity']}")
     print(f"   Proof Completeness: {complete_result['proof_completeness']}")
 

@@ -147,16 +147,24 @@ class LoRACompressedGrid:
 
     def _reconstruct_full_state(self):
         """
-        Perform full LoRA reconstruction: Base + AΔB
+        Perform full LoRA reconstruction: Base + AΔB for each position
+
+        For each position i: influence[i] = A[i,:] @ delta @ B[:,i]
+        This gives the correct compressed state representation.
 
         This is the computational bottleneck but enables the compression benefit.
         """
-        # Matrix multiplication: A @ delta @ B
-        # Result: (144,) reconstructed influence values
-        # Reshaped to (12,12) grid
+        # Compute influence for each position individually
+        # Result: (N,) reconstructed influence values where N = flat_size
+        influence_values = np.zeros(self.flat_size, dtype=np.float32)
 
-        intermediate = self.A @ self.delta @ self.B  # Shape: (144,)
-        influence_grid = intermediate.reshape((self.size, self.size))
+        for i in range(self.flat_size):
+            # LoRA reconstruction for position i:
+            # influence[i] = A[i,:] @ delta @ B[:,i]
+            influence_values[i] = self.A[i, :] @ self.delta @ self.B[:, i]
+
+        # Reshape to grid format
+        influence_grid = influence_values.reshape((self.size, self.size))
 
         self._last_reconstruction = self.base_state + influence_grid
         self._cache_valid = True

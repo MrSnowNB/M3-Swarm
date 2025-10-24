@@ -1,0 +1,95 @@
+# =============================================================================
+# Gate 3: Glider Emergence Validation Configuration
+# =============================================================================
+# Hardware-proof configuration for Conway glider emergence in compressed LoRA space
+
+gate_id: "gate_3"
+
+thresholds:
+  min_cpu_pct: 65.0       # High CPU requirement for glider evolution (65% sustained)
+  min_duration_s: 8.0     # Minimum 8 seconds of complex computation
+  min_io_ops: 5          # Multiple artifact writes during evolution
+  require_gpu: false     # CPU-only, but high computational load
+
+signatures:
+  key_ref: "hardware"
+  algorithm: "sha256"
+  include_fingerprint: true
+
+chain:
+  require_previous_signature: true
+  # Validates Gate 2 signature before proceeding with glider analysis
+  max_chain_depth: 5
+
+execution:
+  max_runtime_s: 180      # 3 minutes maximum for emergence evolution
+  emergency_stop_on_low_cpu: true
+  progress_reporting: true
+  environment_check:
+    prevent_trace: true
+    validate_monotonic: true
+
+instrumentation:
+  metrics_interval_s: 2.0  # Less frequent but more detailed
+  artifact_base_path: ".checkpoints"
+  require_filesync: true
+  compression_enabled: false
+
+reporting:
+  enable_blockchain_anchoring: false
+  report_format: "json"
+
+# Gate-specific parameters for Conway glider detection
+gate_specific:
+  emergence:
+    grid_size: 12          # Consistent with other gates
+    evolution_steps: 100   # Allow time for glider formation and movement
+    min_glider_count: 3    # Require at least 3 glider patterns to emerge
+    movement_threshold: 2  # Gliders must move at least 2 cells
+    pattern_periodicity: true  # Validate periodic glider movement
+
+  conway_rules:
+    survival_rules: [2, 3]     # Live cells with 2-3 neighbors survive
+    birth_rules: [3]           # Dead cells with exactly 3 neighbors birth
+    overpopulation_death: 4    # 4+ neighbors die immediately
+    underpopulation_death: 1   # 1 or 0 neighbors die
+
+  validation_criteria:
+    glider_patterns_detected: true   # Must find classic glider shapes
+    periodic_movement: true          # Gliders must exhibit repeating translation
+    rule_compliance: true            # Conway evolution must follow rules
+    emergence_from_noise: true       # Patterns emerge in initially random state
+
+# Performance expectations for M3 Max
+performance_expectations:
+  target_fps: 10.0         # Expected steps per second for glider evolution
+  memory_growth: "<50MB"   # Bound memory usage during long evolution
+  cpu_stability: "65-85%"  # Consistent high CPU during computation
+  thermal_profile: "gradual rise OK, no thermal throttling"
+
+# Anti-hallucination specific checks for emergence gate
+anti_hallucination:
+  pattern_validation: true      # Ensure detected gliders follow Conway rules
+  movement_verification: true   # Verify spatial translation is physically valid
+  entropy_checks: true          # Validate emergence from initial conditions
+  rule_adherence: true          # Confirm no rule violations in evolution
+
+  mock_detection:
+    force_rule_check: true      # Re-simulate steps to verify claims
+    spatial_consistency: true   # Ensure glider positions are reachable
+    temporal_consistency: true  # Movement must be step-by-step valid
+
+# Expected artifacts from successful glider evolution
+expected_artifacts:
+  - "glider_detection.json": "Pattern identification results with coordinates"
+  - "evolution_snapshots.json": "Grid states at key evolution points"
+  - "trajectory_analysis.json": "Glider paths and movement validation"
+  - "rule_compliance.json": "Verification that Conway rules were followed"
+
+# Failure detection patterns
+failure_patterns:
+  no_emergence: "random_initialization_without_glider_formation"
+  static_patterns: "patterns_form_but_dont_translate"
+  rule_violations: "evolution_breaks_Conway_rules"
+  fast_execution: "computation_finishes_unrealistically_quick"
+  low_resource: "hardware_utilization_below_required_thresholds"
