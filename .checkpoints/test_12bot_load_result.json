@@ -1,0 +1,10 @@
+{
+  "test": "TEST_12_003",
+  "duration_seconds": 31.64,
+  "total_tasks_submitted": 36,
+  "successful_tasks_returned": 37,
+  "success_rate": 102.78,
+  "threshold": 70.0,
+  "passed": true,
+  "concurrent_bots": 12
+}

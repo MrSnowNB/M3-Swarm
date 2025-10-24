@@ -1,0 +1,70 @@
+{
+  "execution_id": "e0696f1b-fb83-4182-bbca-fa5bf42da7f7",
+  "hardware_challenge": {
+    "execution_id": "e0696f1b-fb83-4182-bbca-fa5bf42da7f7",
+    "hardware_fingerprint_hash": "c1c0528a30fc7366305fbc0792651f37b374804f4a1915d3ca0f80704470993a",
+    "nonce": "df323fbab82034b60a50f49df32ca4a3e7743a46e61bb77b17ac38eef93dd90a",
+    "resource_baseline_hash": "7e4bc7f28182b67f527bc491756ec6fe9d0b9722ad8f184aed69d3ed6ba15aac",
+    "start_time": "2025-10-24T07:40:29.809737",
+    "test_name": "test_compression_ratio_hardware"
+  },
+  "phase": "execution_start",
+  "proof_entropy": "a1436d2130ff3a76e30dd9cf51a714c219a6e009e0e193369d5c3bc1701cedaf",
+  "resource_snapshot": {
+    "active_processes": 759,
+    "cpu_percent": 12.2,
+    "cpu_times_percent": {
+      "idle": 91.4,
+      "system": 2.9,
+      "user": 5.7
+    },
+    "disk_io": {
+      "read_bytes": 1084707732992,
+      "read_count": 25789403,
+      "read_time": 10888566,
+      "write_bytes": 884923887616,
+      "write_count": 33851007,
+      "write_time": 5170741
+    },
+    "load_avg": [
+      2.62890625,
+      2.623046875,
+      2.748046875
+    ],
+    "memory": {
+      "available": 15176712192,
+      "percent": 60.7,
+      "total": 38654705664,
+      "used": 18427183104
+    },
+    "net_io": {
+      "bytes_recv": 3483220992,
+      "bytes_sent": 4645783552,
+      "dropin": 0,
+      "dropout": 0,
+      "errin": 0,
+      "errout": 0,
+      "packets_recv": 220673541,
+      "packets_sent": 138389329
+    },
+    "threads_count": 759,
+    "timestamp": "2025-10-24T07:40:30.167676"
+  },
+  "system_fingerprint": {
+    "boot_time": 1755760031.0,
+    "chip_type": "Apple M3 Max",
+    "cpu_count": 14,
+    "hardware_uuid": "B0529170-6928-5B89-9265-D5189A6CBF2D",
+    "machine": "arm64",
+    "memory_total": 38654705664,
+    "physical_cpus": 14,
+    "pid": 41860,
+    "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+    "ppid": 1376,
+    "processor": "arm",
+    "serial_number": "J4X04067P1",
+    "timing_entropy": "c4f7247faada58a53f3af3e1340e7d145d5e881c87f069c8fb9430d564ff5753"
+  },
+  "test_name": "test_compression_ratio_hardware",
+  "timestamp": "2025-10-24T07:40:30.168029"
+}

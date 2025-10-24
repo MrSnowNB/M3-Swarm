@@ -1,0 +1,555 @@
+---
+# ============================================================================
+# LORA GRID SWARM: AI-First Build System
+# ============================================================================
+# Version: 1.0.0
+# Purpose: Build 12×12 LoRA-compressed agent grid with wave propagation
+# Hardware: M3 Max 14-core, 36GB RAM (or equivalent)
+# Status: Production-ready for AI coding agents
+# ============================================================================
+
+metadata:
+  project_name: "LoRA Grid Swarm"
+  target_capacity: "144 agents (12×12 grid)"
+  key_innovation: "LoRA-inspired state compression for swarm coordination"
+  audience: "AI Coding Agents + Human Developers"
+
+# ============================================================================
+# EXECUTIVE SUMMARY
+# ============================================================================
+executive_summary: |
+  This system implements a novel swarm architecture using LoRA's mathematical
+  principle (low-rank matrix decomposition) for efficient state compression
+  and wave-based coordination.
+
+  Key Features:
+  - 144 concurrent agents in 12×12 spatial grid
+  - State compression: >100× reduction vs full broadcast
+  - Wave propagation via low-rank influence matrix
+  - Conway-like rules for emergent patterns (gliders)
+  - Exponential decay with tunable half-life
+
+  Innovation:
+  LoRA is typically used for model fine-tuning. We use its mathematical
+  structure for distributed swarm state representation - agents "float"
+  on a shared influence matrix that can be updated with minimal bandwidth.
+
+# ============================================================================
+# SYSTEM ARCHITECTURE
+# ============================================================================
+architecture:
+  layers:
+    layer_1_grid_matrix:
+      name: "LoRA-Compressed State Matrix"
+      size: "12×12 = 144 positions"
+      representation:
+        base_state: "Steady-state grid values"
+        low_rank_decomp: "A (144×r) × Δ (r) × B (r×144)"
+        rank: 4-8  # Compression parameter
+
+      operations:
+        flip_bit: "Inject influence into rank-space"
+        decay_step: "Exponential return to base (half-life)"
+        get_influence: "Reconstruct local state: Base + AΔB"
+
+    layer_2_agent_grid:
+      name: "Floating Agent Grid"
+      count: 144
+      topology: "2D grid with Von Neumann neighborhood"
+
+      per_agent_state:
+        position: "(row, col)"
+        internal_state: "float (current activation)"
+        neighbors: "4 adjacent agents (up/down/left/right)"
+
+      agent_behavior:
+        sense: "Read local influence from LoRA matrix"
+        update: "Adjust internal state based on gradient"
+        propagate: "Pass influence to neighbors if threshold exceeded"
+        decay: "Return toward base state"
+
+    layer_3_rules_engine:
+      name: "Conway-Like Rules for Emergence"
+
+      rules:
+        survival: "Agent stays active if 2-3 neighbors active"
+        death_underpopulation: "Agent deactivates if <2 neighbors"
+        death_overpopulation: "Agent deactivates if >3 neighbors"
+        birth: "Inactive agent activates if exactly 3 neighbors active"
+
+      emergent_patterns:
+        - "Gliders (traveling patterns)"
+        - "Oscillators (periodic patterns)"
+        - "Still lifes (static patterns)"
+
+# ============================================================================
+# HARDWARE REQUIREMENTS
+# ============================================================================
+hardware_requirements:
+  minimum:
+    cpu_cores: 8
+    ram: 16  # GB
+    python: "3.10+"
+    os: ["macOS", "Linux", "Windows"]
+
+  recommended:
+    cpu_cores: 14  # M3 Max, AMD Ryzen 9, Intel i9
+    ram: 32  # GB
+    python: "3.11+"
+    os: "macOS ARM64 or Linux x86_64"
+
+  validated_platforms:
+    - platform: "M3 Max 14-core, 36GB"
+      status: "Validated"
+      max_agents: 144
+      notes: "Primary development platform"
+
+    - platform: "Z8 Linux Workstation"
+      status: "Validated (Swarm-100 baseline)"
+      max_agents: 100+
+      notes: "Original prototype platform"
+
+# ============================================================================
+# DEPENDENCY INSTALLATION
+# ============================================================================
+dependencies:
+  python_packages:
+    core:
+      - "numpy>=1.24.0"
+      - "scipy>=1.10.0"
+      - "matplotlib>=3.7.0"
+
+    visualization:
+      - "seaborn>=0.12.0"
+      - "pillow>=9.5.0"
+
+    optional:
+      - "psutil>=5.9.0"  # For monitoring
+      - "rich>=13.0.0"   # For pretty CLI output
+
+  installation_command: |
+    pip install numpy scipy matplotlib seaborn pillow psutil rich
+
+# ============================================================================
+# PROJECT STRUCTURE
+# ============================================================================
+project_structure:
+  root: "LoRA-Grid-Swarm/"
+
+  directories:
+    core:
+      - "lora_grid.py"           # LoRA matrix implementation
+      - "floating_agent.py"      # Agent behavior
+      - "rules_engine.py"        # Conway-like rules
+      - "swarm_manager.py"       # Orchestration
+
+    config:
+      - "grid_config.yaml"       # Grid parameters
+      - "rules_config.yaml"      # Conway rules
+      - "system_config.yaml"     # Hardware settings
+
+    tests:
+      - "test_lora_grid.py"      # Compression validation
+      - "test_floating_agent.py" # Agent unit tests
+      - "test_rules_engine.py"   # Conway validation
+      - "test_swarm_manager.py"  # Grid spawning
+      - "test_compression.py"    # Gate 1
+      - "test_propagation.py"    # Gate 2
+      - "test_glider.py"         # Gate 3
+      - "test_decay.py"          # Gate 4
+      - "test_144_agents.py"     # Gate 5
+
+    utils:
+      - "visualization.py"       # Wave/grid visualization
+      - "metrics.py"             # Performance tracking
+      - "diagnostics.py"         # Error detection
+
+    docs:
+      - "AI_AGENT_GUIDE.md"      # Step-by-step for agents
+      - "TROUBLESHOOTING.md"     # Common issues
+      - "THEORY.md"              # Mathematical explanation
+      - "BUILD_REPORT.md"        # Generated
+
+    logs:
+      - "build.log"
+      - "errors.log"
+      - "metrics.log"
+
+    checkpoints:
+      - "phase_*.json"           # Validation gates
+
+# ============================================================================
+# BUILD PHASES (GATED VALIDATION)
+# ============================================================================
+build_phases:
+  phase_0_prerequisites:
+    name: "Environment Setup"
+    checkpoint: ".checkpoints/phase_0_lora_complete.json"
+
+    steps:
+      - id: "ENV_001"
+        name: "Validate Python Version"
+        command: "python3 --version"
+        expected: ">= 3.10"
+
+        failure_recovery:
+          issue: "Python < 3.10"
+          action: "Install Python 3.11+ from python.org or brew"
+          retry: false
+
+      - id: "ENV_002"
+        name: "Verify NumPy"
+        test: |
+          import numpy as np
+          assert np.__version__ >= '1.24.0'
+
+        failure_recovery:
+          issue: "NumPy not available"
+          action: "pip install numpy>=1.24.0"
+
+      - id: "ENV_003"
+        name: "Verify SciPy and Matplotlib"
+        test: |
+          import scipy
+          import matplotlib
+          assert scipy.__version__ >= '1.10.0'
+          assert matplotlib.__version__ >= '3.7.0'
+
+        failure_recovery:
+          issue: "SciPy/Matplotlib missing"
+          action: "pip install scipy matplotlib"
+
+      - id: "ENV_004"
+        name: "Create LoRA Grid Directory Structure"
+        script: |
+          mkdir -p lora_grid_swarm/core lora_grid_swarm/config
+          mkdir -p lora_grid_swarm/tests lora_grid_swarm/utils lora_grid_swarm/docs
+          mkdir -p lora_grid_swarm/logs .checkpoints
+        validation: "All directories exist"
+
+    success_criteria:
+      - "Python 3.10+ validated"
+      - "NumPy/SciPy/Matplotlib available"
+      - "Directory structure created"
+
+  phase_1_core_implementation:
+    name: "Implement LoRA Grid Core (4 Modules)"
+    checkpoint: ".checkpoints/phase_1_lora_complete.json"
+    requires: ".checkpoints/phase_0_lora_complete.json"
+
+    implementations:
+      - file: "lora_grid_swarm/core/lora_grid.py"
+        class: "LoRACompressedGrid"
+
+        required_methods:
+          - "__init__(size, rank, base_state)"
+          - "get_influence(row, col) -> float"
+          - "flip_bit(bit_index) -> None"
+          - "decay_step(half_life) -> None"
+          - "get_full_state() -> np.ndarray"
+
+        validation_test: "lora_grid_swarm/tests/test_lora_grid.py"
+
+      - file: "lora_grid_swarm/core/floating_agent.py"
+        class: "FloatingAgent"
+
+        required_methods:
+          - "__init__(row, col, grid)"
+          - "sense_influence() -> float"
+          - "update_state() -> None"
+          - "propagate_to_neighbors() -> None"
+          - "get_neighbors() -> List[Tuple[int,int]]"
+
+        validation_test: "lora_grid_swarm/tests/test_floating_agent.py"
+
+      - file: "lora_grid_swarm/core/rules_engine.py"
+        class: "ConwayGliderRules"
+
+        required_methods:
+          - "update_cell(agent, grid) -> None"
+          - "count_active_neighbors(agent, agents) -> int"
+
+        validation_test: "lora_grid_swarm/tests/test_rules_engine.py"
+
+      - file: "lora_grid_swarm/core/swarm_manager.py"
+        class: "LoRASwarmManager"
+
+        required_methods:
+          - "spawn_grid(size) -> int"
+          - "step() -> None"
+          - "inject_pattern(pattern_name, position) -> None"
+          - "get_metrics() -> Dict"
+          - "shutdown() -> None"
+
+        validation_test: "lora_grid_swarm/tests/test_swarm_manager.py"
+
+    success_criteria:
+      - "All 4 core files implemented"
+      - "All classes have required methods"
+      - "Basic unit tests pass"
+      - "No import errors"
+
+  phase_2_validation_gates:
+    name: "5-Gate Validation System"
+    checkpoint: ".checkpoints/phase_2_lora_complete.json"
+    requires: ".checkpoints/phase_1_lora_complete.json"
+
+    gates:
+      gate_1_compression:
+        name: "Compression Ratio Validation"
+        test_file: "lora_grid_swarm/tests/test_compression.py"
+        command: "cd lora_grid_swarm && python -m pytest tests/test_compression.py"
+
+        test_logic: |
+          def test_compression_ratio():
+              from core.lora_grid import LoRACompressedGrid
+              import numpy as np
+
+              # Full state representation (144 agents, 10 features, 8 bytes/float)
+              full_state_size = 144 * 10 * 8
+
+              # LoRA compressed
+              rank = 4
+              grid = LoRACompressedGrid(size=12, rank=rank)
+              compressed_size = (144 * rank + rank * 10 + rank) * 8
+
+              ratio = full_state_size / compressed_size
+
+              assert ratio > 100, f"Compression ratio {ratio} < 100"
+              return {"ratio": ratio, "passed": True}
+
+        validation:
+          metric: "compression_ratio"
+          threshold: "> 100×"
+          must_pass: true
+
+      gate_2_propagation:
+        name: "Wave Propagation Validation"
+        test_file: "lora_grid_swarm/tests/test_propagation.py"
+        command: "cd lora_grid_swarm && python -m pytest tests/test_propagation.py"
+
+        test_logic: |
+          def test_wave_propagation():
+              from core.lora_grid import LoRACompressedGrid
+              from core.floating_agent import FloatingAgent
+
+              grid = LoRACompressedGrid(size=12, rank=4)
+              agents = [FloatingAgent(i//12, i%12, grid) for i in range(144)]
+
+              # Inject at corner
+              grid.flip_bit(0)
+
+              # Simulate propagation
+              for step in range(50):
+                  for agent in agents:
+                      agent.update_state()
+                      agent.propagate_to_neighbors()
+                  grid.decay_step(half_life=20)
+
+                  # Check if wave reached corner
+                  corner_influence = grid.get_influence(11, 11)
+                  if corner_influence > 0.1:
+                      break
+
+              assert corner_influence > 0.1, "Wave didn't reach opposite corner"
+              assert step < 50, "Wave took too long to propagate"
+
+              return {"arrival_time": step, "final_influence": corner_influence, "passed": True}
+
+        validation:
+          metric: "wave_propagation"
+          threshold: "reaches corner within 50 steps"
+          must_pass: true
+
+      gate_3_glider:
+        name: "Emergent Pattern Validation"
+        test_file: "lora_grid_swarm/tests/test_glider.py"
+        command: "cd lora_grid_swarm && python -m pytest tests/test_glider.py"
+
+        test_logic: |
+          def test_glider_emergence():
+              from core.lora_grid import LoRACompressedGrid
+              from core.floating_agent import FloatingAgent
+              from core.rules_engine import ConwayGliderRules
+
+              grid = LoRACompressedGrid(size=12, rank=4)
+              agents = [FloatingAgent(i//12, i%12, grid) for i in range(144)]
+
+              # Initialize glider pattern at center
+              glider = [(5,5), (6,6), (4,7), (5,7), (6,7)]
+              for row, col in glider:
+                  idx = row * 12 + col
+                  agents[idx].internal_state = 1.0
+
+              # Track center of mass movement
+              positions = []
+              for step in range(50):
+                  active_positions = []
+                  for agent in agents:
+                      ConwayGliderRules.update_cell(agent, grid)
+
+                      if agent.internal_state > 0.5:
+                          active_positions.append((agent.row, agent.col))
+
+                  if active_positions:
+                      com_row = sum(r for r,c in active_positions) / len(active_positions)
+                      com_col = sum(c for r,c in active_positions) / len(active_positions)
+                      positions.append((com_row, com_col))
+
+                  grid.decay_step(half_life=50)
+
+              # Calculate total movement
+              if len(positions) >= 2:
+                  distance = np.linalg.norm(np.array(positions[-1]) - np.array(positions[0]))
+              else:
+                  distance = 0
+
+              assert distance > 2, f"Glider moved {distance} < 2 cells"
+              return {"distance": distance, "passed": True}
+
+        validation:
+          metric: "glider_movement"
+          threshold: "> 2 cells movement"
+          must_pass: true
+
+      gate_4_decay:
+        name: "Half-Life Decay Validation"
+        test_file: "lora_grid_swarm/tests/test_decay.py"
+        command: "cd lora_grid_swarm && python -m pytest tests/test_decay.py"
+
+        test_logic: |
+          def test_decay_half_life():
+              from core.lora_grid import LoRACompressedGrid
+              import numpy as np
+
+              grid = LoRACompressedGrid(size=12, rank=4)
+              half_life = 10
+
+              # Strong perturbation
+              grid.delta[:] = 1.0
+              initial = np.linalg.norm(grid.delta)
+
+              # Apply decay for one half-life
+              for _ in range(half_life):
+                  grid.decay_step(half_life=half_life)
+
+              final = np.linalg.norm(grid.delta)
+              ratio = final / initial
+
+              assert 0.45 < ratio < 0.55, f"Ratio {ratio} not ≈ 0.5"
+              return {"ratio": ratio, "passed": True}
+
+        validation:
+          metric: "decay_ratio"
+          threshold: "0.45-0.55 (50% reduction)"
+          must_pass: true
+
+      gate_5_full_scale:
+        name: "144-Agent Full Grid Validation"
+        test_file: "lora_grid_swarm/tests/test_144_agents.py"
+        command: "cd lora_grid_swarm && python -m pytest tests/test_144_agents.py"
+
+        test_logic: |
+          def test_144_agent_grid():
+              from core.swarm_manager import LoRASwarmManager
+              import time
+
+              manager = LoRASwarmManager()
+
+              # Spawn full grid
+              count = manager.spawn_grid(size=12)
+              assert count == 144, f"Spawned {count} != 144"
+
+              # Run for 30 seconds (reduced for faster validation)
+              start = time.time()
+              steps = 0
+
+              while time.time() - start < 30:
+                  manager.step()
+                  steps += 1
+
+              # Check all agents still exist and update
+              metrics = manager.get_metrics()
+              assert metrics.get('total_agents', 0) == 144
+              assert metrics.get('steps_per_second', 0) > 0.5
+
+              manager.shutdown()
+
+              return {
+                  "agents_spawned": count,
+                  "steps_executed": steps,
+                  "steps_per_second": metrics.get('steps_per_second', 0),
+                  "passed": True
+              }
+
+        validation:
+          metric: "full_grid_operation"
+          threshold: "144 agents stable for 30 seconds"
+          must_pass: true
+
+# ============================================================================
+# AI AGENT EXECUTION PROTOCOL
+# ============================================================================
+ai_agent_protocol:
+  primary_command: "python3 scripts/build_lora_grid.py"
+
+  execution_sequence:
+    - "Phase 0: Setup environment (validate Python, install deps)"
+    - "Phase 1: Implement core (LoRA grid, agents, rules, manager)"
+    - "Phase 2: Run validation gates (5 gates, all must pass)"
+    - "Phase 3: Generate visualizations and docs"
+    - "Final: Create proof bundle and commit"
+
+  critical_rules:
+    - "MUST pass all 5 validation gates"
+    - "MUST capture evidence at each gate"
+    - "MUST NOT skip implementation steps"
+    - "MUST generate proof bundle"
+
+  abort_conditions:
+    - "3 consecutive test failures after recovery"
+    - "Memory exhaustion"
+    - "Import errors after package install"
+
+# ============================================================================
+# DEPLOYMENT READY
+# ============================================================================
+quick_start:
+  one_command_build: |
+    git clone https://github.com/username/lora-grid-swarm
+    cd lora-grid-swarm
+    python3 scripts/build_lora_grid.py
+
+  expected_output: |
+    ✅ Phase 0 Complete: Environment ready
+    ✅ Phase 1 Complete: Core implemented
+    ✅ Phase 2 Complete: All 5 gates passed
+    ✅ Phase 3 Complete: Visualizations generated
+    🎉 BUILD SUCCESSFUL: LoRA Grid Swarm validated
+
+  duration: "15-25 minutes (depending on hardware)"
+
+# ============================================================================
+# SUCCESS CRITERIA
+# ============================================================================
+success_criteria:
+  minimum_acceptable:
+    - "Phase 0-1 complete (environment + implementation)"
+    - "Gates 1-3 pass (compression, propagation, glider)"
+
+  target_success:
+    - "All 3 phases complete"
+    - "All 5 gates pass"
+
+  optimal_success:
+    - "All phases complete"
+    - "All gates pass with margin"
+    - "Performance exceeds targets"
+
+---
+
+## Build System Ready for Implementation
+
+This comprehensive YAML master plan provides the complete specification for autonomous
+construction of the LoRA Grid Swarm system by AI coding agents. All requirements,
+validation procedures, and success criteria are defined for point-and-shoot deployment.

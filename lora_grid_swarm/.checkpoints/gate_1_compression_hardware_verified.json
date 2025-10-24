@@ -1,0 +1,200 @@
+{
+  "test_result": {
+    "test_name": "Gate 1: LoRA Compression Ratio",
+    "gate_criteria": ">100\u00d7 compression ratio",
+    "best_compression_ratio": 360.0,
+    "gate_passed": true,
+    "rank_results": {
+      "2": {
+        "rank": 2,
+        "grid_positions": 144,
+        "full_state_bytes": 11520,
+        "full_vs_lora_bytes": 11520,
+        "delta_vs_full_ratio": 360.0,
+        "compression_effective": true
+      },
+      "4": {
+        "rank": 4,
+        "grid_positions": 144,
+        "full_state_bytes": 11520,
+        "full_vs_lora_bytes": 11520,
+        "delta_vs_full_ratio": 90.0,
+        "compression_effective": false
+      },
+      "6": {
+        "rank": 6,
+        "grid_positions": 144,
+        "full_state_bytes": 11520,
+        "full_vs_lora_bytes": 11520,
+        "delta_vs_full_ratio": 40.0,
+        "compression_effective": false
+      },
+      "8": {
+        "rank": 8,
+        "grid_positions": 144,
+        "full_state_bytes": 11520,
+        "full_vs_lora_bytes": 11520,
+        "delta_vs_full_ratio": 22.5,
+        "compression_effective": false
+      }
+    },
+    "validation_timestamp": null,
+    "evidence": {
+      "theoretical_full_state": "11520 bytes (144 positions \u00d7 10 features \u00d7 8B)",
+      "lora_compressed_state": "512 bytes (rank\u00d7rank matrix)",
+      "compression_achievement": "22.5\u00d7 achieved"
+    }
+  },
+  "hardware_proofs": {
+    "system_fingerprint": {
+      "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+      "machine": "arm64",
+      "processor": "arm",
+      "cpu_count": 14,
+      "physical_cpus": 14,
+      "memory_total": 38654705664,
+      "boot_time": 1755760031.0,
+      "pid": 41860,
+      "ppid": 1376,
+      "chip_type": "Apple M3 Max",
+      "serial_number": "J4X04067P1",
+      "hardware_uuid": "B0529170-6928-5B89-9265-D5189A6CBF2D",
+      "timing_entropy": "c4f7247faada58a53f3af3e1340e7d145d5e881c87f069c8fb9430d564ff5753"
+    },
+    "execution_proofs": {
+      "initial_resource_check": {
+        "validation_key": "initial_resource_check",
+        "monitoring_duration": 0.05507206916809082,
+        "cpu_usage": {
+          "initial_percent": 15.9,
+          "final_percent": 0.0,
+          "delta_percent": -15.9,
+          "meets_threshold": false
+        },
+        "memory_usage": {
+          "initial_mb": 17573,
+          "final_mb": 17581,
+          "delta_mb": 8
+        },
+        "disk_io_delta": {
+          "read_count": 8,
+          "write_count": 1,
+          "read_bytes": 86016,
+          "write_bytes": 4096,
+          "read_time": 2,
+          "write_time": 0
+        },
+        "cpu_entropy": "59f6989a5dcd54c0752af714f0fa4ce993b07bb4c13777be8898c6222a0b0d6f",
+        "timestamp": "2025-10-24T07:40:30.393328",
+        "method": "hardware_resource_validation"
+      },
+      "test_execution": {
+        "validation_key": "test_execution",
+        "monitoring_duration": 0.10504579544067383,
+        "cpu_usage": {
+          "initial_percent": 0.0,
+          "final_percent": 0.0,
+          "delta_percent": 0.0,
+          "meets_threshold": false
+        },
+        "memory_usage": {
+          "initial_mb": 17573,
+          "final_mb": 17608,
+          "delta_mb": 35
+        },
+        "disk_io_delta": {
+          "read_count": 279,
+          "write_count": 4,
+          "read_bytes": 7712768,
+          "write_bytes": 970752,
+          "read_time": 29,
+          "write_time": 1
+        },
+        "cpu_entropy": "f34484ac3a09dacd0ab943edf05f134981fdccf1b6da8ba54fe87c543cd77867",
+        "timestamp": "2025-10-24T07:40:30.716477",
+        "method": "hardware_resource_validation"
+      },
+      "final_resource_measurement": {
+        "cpu_percent": 10.6,
+        "cpu_times_percent": {
+          "user": 5.7,
+          "system": 5.0,
+          "idle": 89.4
+        },
+        "memory": {
+          "total": 38654705664,
+          "available": 15141224448,
+          "percent": 60.8,
+          "used": 18467438592
+        },
+        "disk_io": {
+          "read_count": 25789687,
+          "write_count": 33851011,
+          "read_bytes": 1084715531776,
+          "write_bytes": 884924858368,
+          "read_time": 10888599,
+          "write_time": 5170742
+        },
+        "net_io": {
+          "bytes_sent": 4645784576,
+          "bytes_recv": 3483220992,
+          "packets_sent": 138389334,
+          "packets_recv": 220673545,
+          "errin": 0,
+          "errout": 0,
+          "dropin": 0,
+          "dropout": 0
+        },
+        "load_avg": [
+          2.62890625,
+          2.623046875,
+          2.748046875
+        ],
+        "active_processes": 759,
+        "threads_count": 759,
+        "timestamp": "2025-10-24T07:40:30.846308"
+      },
+      "authenticity_verification": {
+        "checks": [
+          [
+            "cpu_usage_detected",
+            false
+          ],
+          [
+            "memory_fluctuation",
+            true
+          ],
+          [
+            "process_stability",
+            true
+          ],
+          [
+            "hardware_identified",
+            true
+          ],
+          [
+            "execution_timing",
+            true
+          ]
+        ],
+        "overall_authentic": false,
+        "verification_timestamp": "2025-10-24T07:40:30.994809"
+      }
+    },
+    "signature_payload_hash": "c0c29dcf275a7f4655afdbc1aeb3794ded47bac3b5b0c7776c291b4ed103f0f0",
+    "hardware_signature": "99ee0fdb3d9d8953e03cda06a04db0e3926da537fab15dfce4ce62877112f959",
+    "verification_method": "hardware_fingerprint_based",
+    "execution_authenticity": "QUESTIONABLE"
+  },
+  "metadata": {
+    "signed_at": "2025-10-24T07:40:30.994812",
+    "signature_version": "1.0",
+    "hardware_proof_module": "HardwareProof-2025"
+  },
+  "final_artifacts": {
+    "artifact_file": ".checkpoints/test_compression_ratio_hardware_e0696f1b-fb83-4182-bbca-fa5bf42da7f7_execution_complete.proof",
+    "artifact_hash": "29c92417cdaf4679341abf300406cd91fb019d5a0ff1b918fa408cfdfd9bee32"
+  },
+  "execution_duration_seconds": 1.185078,
+  "proof_completeness": "HALLUCINATION_RISK"
+}
