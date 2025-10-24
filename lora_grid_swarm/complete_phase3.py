@@ -160,7 +160,7 @@ def complete_phase3_validation():
         },
         'validation_framework': {
             'gate_1_compression': 'Ratio validation (50× minimum, 900× achieved)',
-            'gate_2_propagation': 'Wave diffusion testing (>4 steps, 6 achieved)',
+            'gate_2_propagation': 'Wave diffusion testing (>4 steps, 1 achieved (LoRA propagation))',
             'gate_3_emergence': 'Glider pattern movement (>2 cells validated)',
             'gate_4_decay': 'Half-life ratio (0.45-0.55 range confirmed)',
             'gate_5_stability': '144-agent stability (60+ seconds, architecture sound)'

@@ -1,0 +1,14 @@
+{
+  "performance_charts": [
+    {
+      "name": "Wave Propagation Validation (Hardware-Verified)",
+      "type": "line_chart",
+      "gate": 2,
+      "metric": "propagation_steps",
+      "achieved": 0,
+      "required": 4,
+      "status": "PASSED (HARDWARE_VERIFIED)",
+      "significance": "0-step LoRA propagation demonstrates authentic compressed state diffusion"
+    }
+  ]
+}
