@@ -1,0 +1,70 @@
+{
+  "execution_id": "4c18ef77-01b0-44af-8d2a-182bbcbc22c2",
+  "hardware_challenge": {
+    "execution_id": "4c18ef77-01b0-44af-8d2a-182bbcbc22c2",
+    "hardware_fingerprint_hash": "3ccaea52fccdec375ded4ac16ef0eb883535ab990fe8a73556a80f1ac276d49e",
+    "nonce": "02703a666df55c24964c4330d688bbb74d21994cb1aa3ca0d5b600dbc81d14bb",
+    "resource_baseline_hash": "82efa1999d8a9e178e5eb6f76695e34f12f425a04defaa2b92765d652a3ea247",
+    "start_time": "2025-10-24T11:26:10.461173",
+    "test_name": "test_glider_emergence"
+  },
+  "phase": "execution_complete",
+  "proof_entropy": "7651b43627142b291059f12c87c9fbad2ca3006f48f3da732b3a11c9859b5096",
+  "resource_snapshot": {
+    "active_processes": 770,
+    "cpu_percent": 10.9,
+    "cpu_times_percent": {
+      "idle": 92.5,
+      "system": 2.7,
+      "user": 4.8
+    },
+    "disk_io": {
+      "read_bytes": 1087987523072,
+      "read_count": 25882726,
+      "read_time": 10917366,
+      "write_bytes": 890235342848,
+      "write_count": 34124847,
+      "write_time": 5192368
+    },
+    "load_avg": [
+      3.53662109375,
+      2.94287109375,
+      2.8876953125
+    ],
+    "memory": {
+      "available": 14655651840,
+      "percent": 62.1,
+      "total": 38654705664,
+      "used": 17763008512
+    },
+    "net_io": {
+      "bytes_recv": 3596229632,
+      "bytes_sent": 4750242816,
+      "dropin": 0,
+      "dropout": 0,
+      "errin": 0,
+      "errout": 0,
+      "packets_recv": 220873474,
+      "packets_sent": 138561686
+    },
+    "threads_count": 770,
+    "timestamp": "2025-10-24T11:26:10.695053"
+  },
+  "system_fingerprint": {
+    "boot_time": 1755760031.0,
+    "chip_type": "Apple M3 Max",
+    "cpu_count": 14,
+    "hardware_uuid": "B0529170-6928-5B89-9265-D5189A6CBF2D",
+    "machine": "arm64",
+    "memory_total": 38654705664,
+    "physical_cpus": 14,
+    "pid": 67279,
+    "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+    "ppid": 1376,
+    "processor": "arm",
+    "serial_number": "J4X04067P1",
+    "timing_entropy": "d25df95d36e7d19515dab36c4725d300cd43e8a5fd47bcc1b4088ab1da8ed169"
+  },
+  "test_name": "test_glider_emergence",
+  "timestamp": "2025-10-24T11:26:11.753322"
+}
