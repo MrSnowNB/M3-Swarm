@@ -1,0 +1,14 @@
+{
+  "name": "Agent Coordination Flow",
+  "type": "flow_diagram",
+  "steps": [
+    "1. Grid initialization (\u0394 matrix zero)",
+    "2. Agent injection (state activation)",
+    "3. Parallel agent updates",
+    "4. Conway rule application",
+    "5. Exponential decay",
+    "6. State convergence check"
+  ],
+  "parallelism_enabled": "ThreadPoolExecutor (max_workers=144)",
+  "emergence_demonstrated": "Glider patterns generated"
+}

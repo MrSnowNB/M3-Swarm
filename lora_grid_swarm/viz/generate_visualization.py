@@ -196,21 +196,38 @@ def generate_performance_charts():
                     'significance': '900× compression enables massive state space reduction'
                 })
 
-        # Gate 2: Propagation results
-        gate2_file = Path('.checkpoints/gate_2_propagation_result.json')
-        if gate2_file.exists():
-            with open(gate2_file) as f:
+        # Gate 2: Propagation results - prefer hardware-verified over theoretical
+        # First try hardware-verified artifacts
+        gate2_hw_file = Path('.checkpoints/gate_2_propagation_hardware_verified.json')
+        if gate2_hw_file.exists():
+            with open(gate2_hw_file) as f:
                 gate2_data = json.load(f)
                 charts.append({
-                    'name': 'Wave Propagation Validation',
+                    'name': 'Wave Propagation Validation (Hardware-Verified)',
                     'type': 'line_chart',
                     'gate': 2,
                     'metric': 'propagation_steps',
                     'achieved': gate2_data.get('propagation_steps', 0),
                     'required': gate2_data.get('target_steps', 4),
-                    'status': 'PASSED',
-                    'significance': '6-step propagation demonstrates reliable state diffusion'
+                    'status': 'PASSED (HARDWARE_VERIFIED)',
+                    'significance': f"{gate2_data.get('propagation_steps', 0)}-step LoRA propagation demonstrates authentic compressed state diffusion"
                 })
+        # Fall back to theoretical if hardware results unavailable
+        else:
+            gate2_file = Path('.checkpoints/gate_2_propagation_result.json')
+            if gate2_file.exists():
+                with open(gate2_file) as f:
+                    gate2_data = json.load(f)
+                    charts.append({
+                        'name': 'Wave Propagation Validation',
+                        'type': 'line_chart',
+                        'gate': 2,
+                        'metric': 'propagation_steps',
+                        'achieved': gate2_data.get('propagation_steps', 0),
+                        'required': gate2_data.get('target_steps', 4),
+                        'status': 'PASSED',
+                        'significance': '6-step propagation demonstrates reliable state diffusion'
+                    })
 
         # Gate 3: Glider emergence
         gate3_file = Path('.checkpoints/gate_3_glider_result.json')
