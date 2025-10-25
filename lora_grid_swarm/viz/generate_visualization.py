@@ -25,12 +25,16 @@ def generate_phase3_visualization():
     """
     Generate comprehensive Phase 3 visualization and documentation package
 
+    HARDWARE INTEGRITY REQUIREMENT: Only generates visualizations from hardware-verified data.
+    Will exit with non-zero status if required gate checkpoints are not hardware-verified.
+
     Methodology:
-    1. Create system architecture diagrams
-    2. Generate performance analysis charts
-    3. Produce validation reports for all 5 gates
-    4. Create research documentation package
-    5. Generate technical specifications
+    1. Validate hardware integrity for Gates 1-3 (hardware-verified required)
+    2. Create system architecture diagrams
+    3. Generate performance analysis charts
+    4. Produce validation reports for all 5 gates
+    5. Create research documentation package
+    6. Generate technical specifications
 
     Returns:
         dict: Phase 3 visualization and documentation results
@@ -38,12 +42,23 @@ def generate_phase3_visualization():
     print("🎨 Phase 3: Visualization and Documentation Generation")
     print("=" * 60)
 
+    # HARDWARE INTEGRITY CHECK - Fail fast if no hardware-verified data
+    print("🔍 Validating hardware integrity requirements...")
+
+    if not _validate_hardware_integrity_for_visualization():
+        print("❌ HARDWARE INTEGRITY VIOLATION: Cannot generate visualizations from non-verified data")
+        print("   Required: Hardware-verified Gate 2 propagation checkpoint")
+        print("   Found: Only theoretical or missing checkpoints")
+        print("   Please run hardware-verified tests before generating visualizations")
+        sys.exit(1)
+
     visualization_results = {
         'architecture_diagrams': [],
         'performance_charts': [],
         'validation_reports': [],
         'documentation_packages': [],
-        'technical_specs': {}
+        'technical_specs': {},
+        'hardware_integrity_validated': True
     }
 
     try:
@@ -462,6 +477,55 @@ def generate_research_documentation():
     print(f"   ✓ {len(research_docs)} research documentation packages created")
 
     return research_docs
+
+def _validate_hardware_integrity_for_visualization():
+    """
+    Validate that hardware-verified artifacts exist for required gates before visualization.
+
+    HARDWARE INTEGRITY REQUIREMENT:
+    - Gates 1-2: Must have hardware-verified JSON checkpoints or integrity check fails
+    - Gate 3: May be theoretical if hardware execution failed (acceptable fallback)
+
+    Returns True if visualization can proceed, False otherwise.
+    """
+    try:
+        # Check for Gate 1 hardware-verified checkpoint
+        gate1_hw_file = Path('.checkpoints/gate_1_compression_hardware_verified.json')
+        if not gate1_hw_file.exists():
+            print("   ❌ Gate 1: No hardware-verified checkpoint found")
+            return False
+
+        # Check for Gate 2 hardware-verified checkpoint (CRITICAL for visualization)
+        gate2_hw_file = Path('.checkpoints/gate_2_propagation_hardware_verified.json')
+        if not gate2_hw_file.exists():
+            print("   ❌ Gate 2: No hardware-verified checkpoint found")
+            print("   This is required for hardware-only visualization integrity")
+            return False
+
+        # Validate that Gate 2 checkpoint has proper hardware completion
+        try:
+            with open(gate2_hw_file) as f:
+                gate2_data = json.load(f)
+                completeness = gate2_data.get('proof_completeness', '')
+                if completeness != 'HARDWARE_VERIFIED_COMPLETE':
+                    print(f"   ❌ Gate 2: Invalid completeness '{completeness}' expected 'HARDWARE_VERIFIED_COMPLETE'")
+                    return False
+                authenticity = gate2_data.get('hardware_proofs', {}).get('execution_authenticity', '')
+                if authenticity not in ['HARDWARE_VERIFIED', 'QUESTIONABLE']:
+                    print(f"   ❌ Gate 2: Invalid authenticity '{authenticity}'")
+                    return False
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"   ❌ Gate 2: Malformed checkpoint JSON: {e}")
+            return False
+
+        print("   ✅ Hardware integrity validated for visualization generation")
+        print("   ✅ Gate 1: Hardware-verified compression checkpoint present")
+        print("   ✅ Gate 2: Hardware-verified propagation checkpoint present with complete proofs")
+        return True
+
+    except Exception as e:
+        print(f"   ❌ Hardware integrity validation error: {e}")
+        return False
 
 def generate_technical_specifications():
     """

@@ -1,0 +1,183 @@
+{
+  "test_result": {
+    "test_name": "Gate 3: Glider Emergence Validation",
+    "gate_criteria": "glider moves >2 cells within test duration",
+    "gate_passed": false,
+    "total_movement": 0.05,
+    "steps_executed": 10,
+    "center_positions_recorded": 10,
+    "reason": "insufficient movement (0.1 < 2.0 cells)",
+    "validation_timestamp": null,
+    "evidence": {
+      "glider_pattern": "5-cell center-top configuration",
+      "initial_position": [
+        5.975609756097561,
+        5.609756097560975
+      ],
+      "final_position": [
+        5.963414634146342,
+        5.658536585365853
+      ],
+      "movement_vector": {
+        "dx": -0.01,
+        "dy": 0.05,
+        "distance": 0.05,
+        "direction_degrees": 104.0
+      },
+      "emergence_demonstrated": "0.1 cell displacement",
+      "conway_rules_applied": "survival=2-3, birth=3 neighbors"
+    }
+  },
+  "hardware_proofs": {
+    "system_fingerprint": {
+      "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+      "machine": "arm64",
+      "processor": "arm",
+      "cpu_count": 14,
+      "physical_cpus": 14,
+      "memory_total": 38654705664,
+      "boot_time": 1755760032.0,
+      "pid": 55840,
+      "ppid": 28493,
+      "chip_type": "Apple M3 Max",
+      "serial_number": "J4X04067P1",
+      "hardware_uuid": "B0529170-6928-5B89-9265-D5189A6CBF2D",
+      "timing_entropy": "671ecaf1c73a3aeb7cb8e25c369d105234f791002ed8c1890a5ac5d07ece6fe1"
+    },
+    "execution_proofs": {
+      "initial_resource_check": {
+        "validation_key": "initial_resource_check",
+        "monitoring_duration": 0.05505681037902832,
+        "cpu_usage": {
+          "initial_percent": 10.5,
+          "final_percent": 6.5,
+          "delta_percent": -4.0,
+          "meets_threshold": false
+        },
+        "memory_usage": {
+          "initial_mb": 15654,
+          "final_mb": 15654,
+          "delta_mb": 0
+        },
+        "disk_io_delta": {
+          "read_count": 0,
+          "write_count": 1,
+          "read_bytes": 0,
+          "write_bytes": 4096,
+          "read_time": 0,
+          "write_time": 0
+        },
+        "cpu_entropy": "bbf9085cc07f9e2c47a5e70658318754efe90b6ebd78a2a3a331880abbb70135",
+        "timestamp": "2025-10-25T09:20:41.448663",
+        "method": "hardware_resource_validation"
+      },
+      "test_execution": {
+        "validation_key": "test_execution",
+        "monitoring_duration": 0.10301017761230469,
+        "cpu_usage": {
+          "initial_percent": 20.3,
+          "final_percent": 5.6,
+          "delta_percent": -14.700000000000001,
+          "meets_threshold": false
+        },
+        "memory_usage": {
+          "initial_mb": 15654,
+          "final_mb": 15700,
+          "delta_mb": 45
+        },
+        "disk_io_delta": {
+          "read_count": 262,
+          "write_count": 233,
+          "read_bytes": 8278016,
+          "write_bytes": 4321280,
+          "read_time": 35,
+          "write_time": 7
+        },
+        "cpu_entropy": "6b3b846409350e9ea88c5d4a661bcbff126b4c1d1d87ddc0d2fcf1e5cc71bc4d",
+        "timestamp": "2025-10-25T09:20:42.211569",
+        "method": "hardware_resource_validation"
+      },
+      "final_resource_measurement": {
+        "cpu_percent": 7.1,
+        "cpu_times_percent": {
+          "user": 2.8,
+          "system": 1.4,
+          "idle": 95.8
+        },
+        "memory": {
+          "total": 38654705664,
+          "available": 13629587456,
+          "percent": 64.7,
+          "used": 16462938112
+        },
+        "disk_io": {
+          "read_count": 26699386,
+          "write_count": 35100022,
+          "read_bytes": 1108504252928,
+          "write_bytes": 916193013760,
+          "read_time": 11220569,
+          "write_time": 5279315
+        },
+        "net_io": {
+          "bytes_sent": 5066617856,
+          "bytes_recv": 4558047232,
+          "packets_sent": 139103108,
+          "packets_recv": 221946152,
+          "errin": 0,
+          "errout": 0,
+          "dropin": 0,
+          "dropout": 0
+        },
+        "load_avg": [
+          3.03271484375,
+          2.69580078125,
+          2.80322265625
+        ],
+        "active_processes": 778,
+        "threads_count": 778,
+        "timestamp": "2025-10-25T09:20:42.347468"
+      },
+      "authenticity_verification": {
+        "checks": [
+          [
+            "cpu_usage_detected",
+            false
+          ],
+          [
+            "memory_fluctuation",
+            true
+          ],
+          [
+            "process_stability",
+            true
+          ],
+          [
+            "hardware_identified",
+            true
+          ],
+          [
+            "execution_timing",
+            true
+          ]
+        ],
+        "overall_authentic": false,
+        "verification_timestamp": "2025-10-25T09:20:42.498318"
+      }
+    },
+    "signature_payload_hash": "e931c186b40110813ab27adc86bdea5c237845b0d4dc65e060069951af66198c",
+    "hardware_signature": "14219be2ca91c64a3b1b226371b705345385bbad9002074de1a9427c291141db",
+    "verification_method": "hardware_fingerprint_based",
+    "execution_authenticity": "QUESTIONABLE"
+  },
+  "metadata": {
+    "signed_at": "2025-10-25T09:20:42.498322",
+    "signature_version": "1.0",
+    "hardware_proof_module": "HardwareProof-2025"
+  },
+  "final_artifacts": {
+    "artifact_file": ".checkpoints/test_glider_emergence_4f5249fc-b7c1-4c11-9b1a-29824c5e1b5a_execution_complete.proof",
+    "artifact_hash": "5ad5bea3a348ab8d21819875678e360fe541628a7edcedbc602adda3f7f0bf6d"
+  },
+  "execution_duration_seconds": 1.626576,
+  "proof_completeness": "HALLUCINATION_RISK"
+}
