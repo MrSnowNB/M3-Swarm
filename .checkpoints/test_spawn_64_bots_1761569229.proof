@@ -1,0 +1,15 @@
+{
+  "test": "spawn_64_bots_hardware_verification",
+  "timestamp": 1761569229.646765,
+  "spawn_time_seconds": 12.870112895965576,
+  "memory_before_mb": 56.921875,
+  "memory_after_mb": 116.046875,
+  "memory_delta_mb": 59.125,
+  "cpu_before_percent": 11.0,
+  "cpu_after_percent": 4.4,
+  "threads_before": 3,
+  "threads_after": 66,
+  "thread_delta": 63,
+  "claimed_bots_spawned": 64,
+  "verification": "HARDWARE_FINGERPRINT_VERIFIED"
+}

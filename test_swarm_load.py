@@ -252,7 +252,7 @@ def test_concurrent_bots(manager, concurrent_count, duration):
         print(f"Concurrent test error: {e}")
         return False
 
-def run_idle_test(bots: int, duration: int):
+async def run_idle_test(bots: int, duration: int):
     """Run sustained idle test - bots connected but no active work"""
     print(f"\n{'='*80}")
     print(f"🌱 IDLE TEST: {bots} bots for {duration} seconds")
@@ -265,7 +265,7 @@ def run_idle_test(bots: int, duration: int):
     try:
         # Phase 1: Spawn bots and verify health
         print("🔧 Phase 1: Spawn and verify health...")
-        ready = manager.spawn_and_wait_ready(bots)
+        ready = await manager.spawn_and_wait_ready(bots)
         if not ready:
             raise Exception("Failed to get all bots healthy")
         print("✅ All bots healthy and stable")
@@ -301,7 +301,7 @@ def main():
     args = parser.parse_args()
 
     if args.idle_only:
-        passed = run_idle_test(args.bots, args.duration)
+        passed = asyncio.run(run_idle_test(args.bots, args.duration))
     else:
         passed = asyncio.run(run_load_test(args.bots, args.duration))
 
