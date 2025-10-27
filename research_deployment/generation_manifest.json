@@ -1,0 +1,74 @@
+{
+  "generation_timestamp": "2025-10-27T07:20:55.948719",
+  "generator_version": "1.0.0",
+  "system_info": {
+    "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+    "python_version": "3.14.0 (main, Oct  7 2025, 09:34:52) [Clang 17.0.0 (clang-1700.0.13.3)]",
+    "working_directory": "/Users/marksnowjr/Desktop/swarm test"
+  },
+  "input_parameters": {
+    "gate_ids": [
+      1,
+      2,
+      3
+    ],
+    "output_directory": "research_deployment"
+  },
+  "hardware_verification": {
+    "gates_processed": [
+      1,
+      2,
+      3
+    ],
+    "integrity_status": {
+      "1": {
+        "valid": true,
+        "authenticity": "QUESTIONABLE",
+        "completeness": "HALLUCINATION_RISK",
+        "gate_passed": true
+      },
+      "2": {
+        "valid": true,
+        "authenticity": "HARDWARE_VERIFIED",
+        "completeness": "HARDWARE_VERIFIED_COMPLETE",
+        "gate_passed": true
+      },
+      "3": {
+        "valid": true,
+        "authenticity": "QUESTIONABLE",
+        "completeness": "HALLUCINATION_RISK",
+        "gate_passed": false
+      }
+    }
+  },
+  "generated_artifacts": {
+    "individual_charts": {
+      "gate_summary": "viz/output/gate_summary_dashboard_2025-10-27T07-20-54.png",
+      "execution_timeline": "viz/output/execution_timeline_2025-10-27T07-20-54.png",
+      "propagation_comparison": "viz/output/propagation_comparison_2025-10-27T07-20-54.png"
+    },
+    "html_dashboard": "viz/output/hardware_verified_dashboard_2025-10-27T07-20-54.html",
+    "metrics_bundle_summary": {
+      "total_gates": 3,
+      "hardware_verified_count": 1,
+      "summary_stats": {
+        "total_gates": 3,
+        "passed_gates": 2,
+        "total_execution_time": 2.393409,
+        "average_execution_time": 0.797803,
+        "max_execution_time": 1.208331,
+        "min_execution_time": 1.185078,
+        "total_cpu_usage": 0.0,
+        "max_memory_usage": 0,
+        "hardware_verified_count": 1,
+        "questionable_count": 1
+      }
+    }
+  },
+  "validation_metadata": {
+    "charts_integrity_checked": true,
+    "watermarks_applied": true,
+    "html_embedded_images": true,
+    "manifest_self_verifying": true
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "execution_id": "686e9f9d-9bd0-4572-bc94-2b9f175525cf",
+  "hardware_challenge": {
+    "execution_id": "686e9f9d-9bd0-4572-bc94-2b9f175525cf",
+    "hardware_fingerprint_hash": "bf1e5c6f5b7912d66a5f012e3bf7efed3976146b7ef07a7883b1f654798fbca3",
+    "nonce": "79aecced617b932859455699b56289591971d916b5b77e1f53502e57bf291028",
+    "resource_baseline_hash": "6799ffae9d8d6e77c57a8ba0c7e27953bfc12a591561e8fba17ef2e10af4e1a4",
+    "start_time": "2025-10-27T07:15:00.029565",
+    "test_name": "test_artifact"
+  },
+  "phase": "execution_start",
+  "proof_entropy": "e8811fe52f9d7f6c22b90417a5ef743489b294d3483a4909b4088c4348ca1bd7",
+  "resource_snapshot": {
+    "active_processes": 790,
+    "cpu_percent": 10.5,
+    "cpu_times_percent": {
+      "idle": 92.6,
+      "system": 2.7,
+      "user": 4.7
+    },
+    "disk_io": {
+      "read_bytes": 1128582832640,
+      "read_count": 27676619,
+      "read_time": 11522235,
+      "write_bytes": 929498419200,
+      "write_count": 36028775,
+      "write_time": 5412495
+    },
+    "load_avg": [
+      3.025390625,
+      2.5205078125,
+      3.04638671875
+    ],
+    "memory": {
+      "available": 14114504704,
+      "percent": 63.5,
+      "total": 38654705664,
+      "used": 17554456576
+    },
+    "net_io": {
+      "bytes_recv": 5219391488,
+      "bytes_sent": 5276529664,
+      "dropin": 0,
+      "dropout": 0,
+      "errin": 0,
+      "errout": 0,
+      "packets_recv": 222764134,
+      "packets_sent": 139568486
+    },
+    "threads_count": 790,
+    "timestamp": "2025-10-27T07:15:00.451469"
+  },
+  "system_fingerprint": {
+    "boot_time": 1755760032.0,
+    "chip_type": "Apple M3 Max",
+    "cpu_count": 14,
+    "hardware_uuid": "B0529170-6928-5B89-9265-D5189A6CBF2D",
+    "machine": "arm64",
+    "memory_total": 38654705664,
+    "physical_cpus": 14,
+    "pid": 430,
+    "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+    "ppid": 28493,
+    "processor": "arm",
+    "serial_number": "J4X04067P1",
+    "timing_entropy": "589f32365b8cdf1b40cad13a8750e2af833c493192499451b5d56aee423d4c40"
+  },
+  "test_name": "test_artifact",
+  "timestamp": "2025-10-27T07:15:00.451845"
+}

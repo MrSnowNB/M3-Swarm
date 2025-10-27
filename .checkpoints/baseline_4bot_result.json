@@ -1,12 +1,16 @@
 {
   "test": "4bot_baseline_concurrency",
   "method": "ThreadPoolExecutor_4_threads",
-  "elapsed_seconds": 2.031,
+  "elapsed_seconds": 2.068,
   "threshold": 3.0,
   "passed": true,
-  "speedup_factor": 3.94,
-  "results": [307, 305, 308, 306],
-  "timestamp": 1761145114.872,
-  "interpretation": "TRUE_PARALLELISM",
-  "note": "GATE 0 PASSED: Confirmed parallelism foundation intact"
+  "speedup_factor": 3.87,
+  "results": [
+    6491,
+    6511,
+    6758,
+    7068
+  ],
+  "timestamp": 1761564127.738039,
+  "interpretation": "TRUE_PARALLELISM"
 }
