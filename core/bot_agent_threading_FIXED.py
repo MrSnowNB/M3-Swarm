@@ -81,11 +81,25 @@ class ThreadBotAgent:
         start = time.time()
 
         try:
-            # Ollama call releases GIL - allows true parallelism
-            response = self.client.chat(
-                model=self.config.get('model', 'gemma3:270m'),
-                messages=[{'role': 'user', 'content': prompt}]
-            )
+            # Check if this is an embedding model
+            if self.config.get('embedding_only', False):
+                # Use embeddings API for nomic-embed-text
+                response = self.client.embeddings(
+                    model=self.config.get('model', 'nomic-embed-text:137m-v1.5-fp16'),
+                    prompt=prompt
+                )
+
+                # Convert embedding vector to string representation (as swarm needs response)
+                embedding_vector = response['embedding']
+                response_text = f"Embedding computed: {len(embedding_vector)} dimensions | first 5: {embedding_vector[:5]}"
+
+            else:
+                # Use chat API for conversation models
+                response = self.client.chat(
+                    model=self.config.get('model', 'gemma3:270m'),
+                    messages=[{'role': 'user', 'content': prompt}]
+                )
+                response_text = response['message']['content']
 
             with self.lock:
                 self.total_tasks += 1
@@ -94,7 +108,7 @@ class ThreadBotAgent:
             return BotResponse(
                 bot_id=self.bot_id,
                 success=True,
-                response=response['message']['content'],
+                response=response_text,
                 response_time=time.time() - start
             )
 
@@ -145,11 +159,23 @@ class ThreadBotAgent:
                 'queue_size': self.task_queue.qsize()
             }
 
-    async def health_check(self) -> bool:
+    def health_check(self) -> bool:
         """Check if bot is healthy and can communicate with Ollama"""
         try:
-            # Simple health check for compatibility with async interface
-            result = self.execute("Health check: respond with OK", timeout=3.0)
-            return bool(result.success and result.response and "OK" in str(result.response).upper())
-        except:
+            test_prompt = "Health check"
+            result = self.execute(test_prompt, timeout=5.0)
+
+            if not result.success:
+                return False
+
+            # Check response based on model type
+            if self.config.get('embedding_only', False):
+                # For embeddings, just check if we got a response with valid data
+                return bool(result.response and isinstance(result.response, str) and len(result.response) > 0)
+            else:
+                # For chat models, check for OK response
+                return bool(result.response and "OK" in str(result.response).upper())
+
+        except Exception as e:
+            # Health checks can fail legitimately - don't let them crash the system
             return False

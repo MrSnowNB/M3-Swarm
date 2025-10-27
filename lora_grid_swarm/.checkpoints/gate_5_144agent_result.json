@@ -1,0 +1,31 @@
+{
+  "test_name": "Gate 5: 144-Agent Stability Validation",
+  "gate_criteria": "144-agent system runs 60+ seconds at >0.1 SPS, no crashes",
+  "gate_passed": false,
+  "total_steps": 113732,
+  "total_duration": 60.0,
+  "average_sps": 1895.531,
+  "final_performance_samples": 2307,
+  "test_interrupted": true,
+  "reason": "system crash: None",
+  "validation_timestamp": null,
+  "performance_analysis": {
+    "stability_rating": "poor",
+    "average_sps": 1892.1879,
+    "min_sps": 1812.268,
+    "max_sps": 2626.364,
+    "sps_standard_deviation": 26.0854,
+    "performance_samples": 2307,
+    "consistency_ratio": 0.69,
+    "overall_vs_sampled": 1.002
+  },
+  "evidence": {
+    "swarm_configuration": "12\u00d712 grid, 144 agents, rank-4",
+    "test_duration": "60.0s (target: 60.0s)",
+    "performance_achieved": "1895.531 SPS (required: >0.1 SPS)",
+    "stability_demonstrated": false,
+    "production_readiness": "stability issues detected",
+    "scalability_confirmed": "Full-scale swarm not operational at production level",
+    "convergence_criteria": "Performance degradation observed"
+  }
+}

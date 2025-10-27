@@ -39,11 +39,11 @@ ollama:
   timeout_seconds: 60
 
 model:
-  name: "gemma3:270m"
-  context_length: 2048  # Reduce from 32K to save memory
-  temperature: 0.7
-  top_k: 40
-  top_p: 0.9
+  name: "nomic-embed-text:137m-v1.5-fp16"
+  embedding_only: true
+  model_type: "embedding"
+  context_length: 2048
+  # No generation parameters needed for embeddings
 
 monitoring:
   enabled: true

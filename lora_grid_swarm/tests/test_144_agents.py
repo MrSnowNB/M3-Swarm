@@ -38,7 +38,10 @@ def test_144_agent_stability():
 
     # Import required components
     try:
-        from ..core.swarm_manager import LoRASwarmManager
+        import sys
+        import os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+        from core.swarm_manager import LoRASwarmManager
         print("✅ Imports successful")
     except ImportError as e:
         # Fallback: theoretical validation if direct imports fail
@@ -240,7 +243,8 @@ def estimate_memory_usage(swarm):
     # This would be more accurate with psutil, but we keep it simple
     base_memory = 50.0  # Base memory for SwarmManager + grid
     per_agent_memory = 0.01  # Rough estimate per agent (floats, references, etc.)
-    estimated_mb = base_memory + (swarm.num_agents * per_agent_memory)
+    num_agents = len(getattr(swarm, 'agents', []))  # Fallback if no agents list
+    estimated_mb = base_memory + (num_agents * per_agent_memory)
     return estimated_mb
 
 def test_144_agent_stability_theoretical():

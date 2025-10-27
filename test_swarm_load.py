@@ -58,8 +58,8 @@ async def run_load_test(bot_count: int, duration: int):
     print(f"  Concurrency model: {results.get('concurrency_model', 'unknown')}")
 
     # Calculate throughput
-    throughput = results['successful_tasks'] / results['duration'] if results.get('duration', 0) > 0 else 0
-    results['throughput'] = throughput
+    throughput = results['successful_tasks'] / results['duration'] if results.get('duration', 0) > 0 else 0.0
+    results['throughput'] = float(throughput)  # type: ignore
 
     # Save results
     output_file = f".checkpoints/load_test_{bot_count}bots.json"
