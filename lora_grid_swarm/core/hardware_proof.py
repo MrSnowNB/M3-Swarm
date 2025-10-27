@@ -114,6 +114,8 @@ class HardwareProof:
     def _get_resource_snapshot(self) -> Dict[str, Any]:
         """Capture detailed resource usage snapshot"""
         cpu_times = psutil.cpu_times_percent(interval=0.1)
+        disk_counters = psutil.disk_io_counters()
+        net_counters = psutil.net_io_counters()
 
         return {
             'cpu_percent': psutil.cpu_percent(interval=None),
@@ -128,8 +130,8 @@ class HardwareProof:
                 'percent': psutil.virtual_memory().percent,
                 'used': psutil.virtual_memory().used
             },
-            'disk_io': psutil.disk_io_counters()._asdict() if psutil.disk_io_counters() else None,
-            'net_io': psutil.net_io_counters()._asdict() if psutil.net_io_counters() else {},
+            'disk_io': disk_counters._asdict() if disk_counters else None,
+            'net_io': net_counters._asdict() if net_counters else {},
             'load_avg': os.getloadavg() if hasattr(os, 'getloadavg') else None,
             'active_processes': len([p for p in psutil.process_iter(['pid', 'name']) if p.info['name']]),
             'threads_count': len([t for t in psutil.process_iter(['threads'])]),

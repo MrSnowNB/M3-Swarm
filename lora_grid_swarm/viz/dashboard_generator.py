@@ -11,10 +11,17 @@ import json
 import base64
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
+
+# Import matplotlib with backend configuration
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
 import matplotlib.patches as plt_patches
-plt.use('Agg')  # Non-interactive backend
+from matplotlib.figure import Figure
+
+# Matplotlib availability flag for testing
+MATPLOTLIB_AVAILABLE = True
 
 from .metrics_extractor import HardwareMetricsExtractor
 from .checkpoint_loader import HardwareVerifiedCheckpointLoader
@@ -38,7 +45,7 @@ class DashboardGenerator:
         except:
             self.system_fingerprint = "Unknown"
 
-    def add_hardware_watermark(self, fig: plt.Figure, gate_id: int = None) -> None:
+    def add_hardware_watermark(self, fig: Figure, gate_id: Optional[int] = None) -> None:
         """Add HARDWARE-VERIFIED watermark to plots"""
         watermark_text = "HARDWARE-VERIFIED"
         if gate_id:
@@ -50,7 +57,7 @@ class DashboardGenerator:
                 rotation=0, ha='left', va='bottom',
                 bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
 
-    def generate_gate_summary_chart(self, gate_ids: List[int], output_path: str = None) -> str:
+    def generate_gate_summary_chart(self, gate_ids: List[int], output_path: Optional[str] = None) -> Optional[str]:
         """Generate comprehensive gate summary visualization"""
         # Extract metrics
         metrics_data = []
@@ -126,7 +133,7 @@ class DashboardGenerator:
 
         return output_path
 
-    def generate_execution_timeline(self, gate_ids: List[int], output_path: str = None) -> str:
+    def generate_execution_timeline(self, gate_ids: List[int], output_path: Optional[str] = None) -> str:
         """Generate execution timeline visualization"""
         fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -183,7 +190,7 @@ class DashboardGenerator:
 
         return output_path
 
-    def generate_propagation_comparison(self, show_theoretical: bool = False, output_path: str = None) -> str:
+    def generate_propagation_comparison(self, show_theoretical: bool = False, output_path: Optional[str] = None) -> str:
         """Generate wave propagation comparison chart"""
         fig, ax = plt.subplots(figsize=(10, 8))
 
@@ -220,8 +227,8 @@ class DashboardGenerator:
 
         return output_path
 
-    def generate_html_dashboard(self, gate_ids: List[int], charts: List[str] = None,
-                              output_path: str = None) -> str:
+    def generate_html_dashboard(self, gate_ids: List[int], charts: Optional[List[str]] = None,
+                              output_path: Optional[str] = None) -> str:
         """Generate complete HTML dashboard with all visualizations"""
 
         if charts is None:

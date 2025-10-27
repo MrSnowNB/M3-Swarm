@@ -9,7 +9,7 @@ Generates all required charts, dashboards, and reports with integrity validation
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 # Add parent directory for proper imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -65,8 +65,8 @@ class EndToEndVisualizationGenerator:
         self.integrity_results = integrity_results
         return all_valid
 
-    def generate_complete_visualization_suite(self, gate_ids: List[int] = None,
-                                             output_dir: str = None) -> Dict[str, Any]:
+    def generate_complete_visualization_suite(self, gate_ids: Optional[List[int]] = None,
+                                             output_dir: Optional[str] = None) -> Dict[str, Any]:
         """
         Generate complete visualization suite for specified gates
 

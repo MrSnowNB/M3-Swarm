@@ -11,7 +11,7 @@ import hashlib
 import os
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 def create_publication_ledger():
     """
@@ -189,7 +189,7 @@ def create_publication_ledger():
 
     return ledger_path
 
-def process_artifact(file_path: str) -> Dict[str, Any]:
+def process_artifact(file_path: str) -> Optional[Dict[str, Any]]:
     """Process a single artifact and return metadata with hash"""
     if not os.path.exists(file_path):
         return None
