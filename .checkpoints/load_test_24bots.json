@@ -1,0 +1,10 @@
+{
+  "duration": 30.775542736053467,
+  "total_tasks": 265,
+  "successful_tasks": 265,
+  "success_rate": 100.0,
+  "concurrency_model": "threading",
+  "thread_count": 25,
+  "bot_count": 24,
+  "throughput": 8.61073360339323
+}

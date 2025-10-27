@@ -73,6 +73,48 @@ class ThreadSwarmManager:
         '''Alias for spawn_swarm for backward compatibility'''
         return await self.spawn_swarm(count)
 
+    async def spawn_and_wait_ready(self, count: int, health_timeout: int = 10) -> bool:
+        '''
+        Spawn bots and verify all are ready with healthy Ollama connections
+        Returns True only if ALL bots pass health checks
+        '''
+        print(f"\n🚀 Spawning {count} bots and verifying health...")
+        print(f"   Health timeout: {health_timeout}s per bot")
+        print(f"   Heartbeat: {self.heartbeat_interval}s (CPU smoothing)")
+        print(f"   Stagger: {self.spawn_stagger}s (prevents spike)\n")
+
+        # Spawn bots
+        spawned = await self.spawn_swarm(count)
+        if spawned != count:
+            print(f"\n❌ Failed to spawn all {count} bots (got {spawned})")
+            return False
+
+        # Wait for warm-up/stabilization
+        print("⏳ Allowing bots to stabilize...")
+        time.sleep(2)
+
+        # Verify all bots pass health checks
+        print("🔍 Running health checks on all bots...")
+        healthy_count = 0
+
+        for i, bot in enumerate(self.bots):
+            try:
+                healthy = await bot.health_check()
+                if healthy:
+                    healthy_count += 1
+                    print(f"✅ Bot {i} health check PASSED")
+                else:
+                    print(f"❌ Bot {i} health check FAILED")
+            except Exception as e:
+                print(f"❌ Bot {i} health check ERROR: {e}")
+
+        if healthy_count == count:
+            print(f"\n🎉 ALL {count} BOTS HEALTHY AND READY!\n")
+            return True
+        else:
+            print(f"\n❌ Only {healthy_count}/{count} bots healthy. Aborting.")
+            return False
+
     def broadcast_task(self, prompt: str):
         '''Send task to ALL bots simultaneously (TRUE PARALLEL EXECUTION)'''
         for bot in self.bots:

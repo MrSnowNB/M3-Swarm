@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# from core.swarm_manager import SwarmManager
+from core.swarm_manager import ThreadSwarmManager
 
 async def run_load_test(bot_count: int, duration: int):
     """Run load test with specified parameters"""
@@ -22,23 +22,44 @@ async def run_load_test(bot_count: int, duration: int):
     print(f"🧪 LOAD TEST: {bot_count} bots for {duration} seconds")
     print(f"{'='*80}\n")
 
-    # TODO: AI Agent - Implement actual load test
-    # manager = SwarmManager()
-    # results = await manager.run_stress_test(
-    #     bot_count=bot_count,
-    #     duration_seconds=duration
-    # )
+    # Create real SwarmManager with threading
+    manager = ThreadSwarmManager()
 
-    # PLACEHOLDER - Simulate test
-    await asyncio.sleep(duration)
+    results = None
+    try:
+        # Phase 1: Spawn bots and WAIT for them to be ready
+        print("🔧 Phase 1: Warm-up and health verification...")
+        ready = await manager.spawn_and_wait_ready(bot_count)
+        if not ready:
+            raise Exception("Failed to get all bots healthy and ready")
+        print("✅ All bots healthy - now idling")
 
-    results = {
-        'bot_count': bot_count,
-        'duration': duration,
-        'success_rate': 95.5,
-        'avg_response_time': 1.2,
-        'throughput': bot_count * 2.5
-    }
+        # Phase 2: Verification period (bots idling but ready)
+        print("⏱️ Phase 2: Idling stability check...")
+        await asyncio.sleep(5)
+        print("✅ Swarm stable during idle period")
+
+        # Phase 3: Run REAL stress test
+        print("🚀 Phase 3: Load testing...")
+        results = await manager.run_stress_test(
+            bot_count=bot_count,
+            duration=duration
+        )
+
+    finally:
+        manager.shutdown()
+
+    if not results:
+        results = {'success_rate': 0, 'duration': 0, 'bot_count': bot_count}
+
+    print(f"\nTest Results:")
+    print(f"  Bot count: {results['bot_count']}")
+    print(f"  Active threads: {results.get('thread_count', 0)}")
+    print(f"  Concurrency model: {results.get('concurrency_model', 'unknown')}")
+
+    # Calculate throughput
+    throughput = results['successful_tasks'] / results['duration'] if results.get('duration', 0) > 0 else 0
+    results['throughput'] = throughput
 
     # Save results
     output_file = f".checkpoints/load_test_{bot_count}bots.json"
